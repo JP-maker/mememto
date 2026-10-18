@@ -1,12 +1,11 @@
 package com.memento.lesson;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.json.JsonMapper;
 
 /** Leçons d'un compte. Toutes les opérations sont limitées au propriétaire. */
 @Service
@@ -16,10 +15,10 @@ public class LessonService {
     static final int MAX_PER_USER = 50;
 
     private final LessonRepository lessons;
-    private final ObjectMapper json;
+    private final JsonMapper json;
     private final Clock clock;
 
-    public LessonService(LessonRepository lessons, ObjectMapper json, Clock clock) {
+    public LessonService(LessonRepository lessons, JsonMapper json, Clock clock) {
         this.lessons = lessons;
         this.json = json;
         this.clock = clock;
@@ -47,19 +46,12 @@ public class LessonService {
         lessons.delete(lessons.findByIdAndUserId(id, userId).orElseThrow(LessonNotFoundException::new));
     }
 
+    // Jackson 3 : les erreurs de (dé)sérialisation sont des exceptions non contrôlées.
     private String write(LessonData data) {
-        try {
-            return json.writeValueAsString(data);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException(e);
-        }
+        return json.writeValueAsString(data);
     }
 
     private LessonView view(Lesson lesson) {
-        try {
-            return new LessonView(lesson.getId(), json.readValue(lesson.getData(), LessonData.class));
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException(e);
-        }
+        return new LessonView(lesson.getId(), json.readValue(lesson.getData(), LessonData.class));
     }
 }

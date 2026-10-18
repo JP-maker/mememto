@@ -8,7 +8,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
 
 class LessonServiceTest {
 
@@ -30,7 +30,7 @@ class LessonServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new LessonService(repo, new ObjectMapper(), Clock.systemUTC());
+        service = new LessonService(repo, JsonMapper.builder().build(), Clock.systemUTC());
         when(repo.save(any(Lesson.class))).thenAnswer(call -> call.getArgument(0));
     }
 
