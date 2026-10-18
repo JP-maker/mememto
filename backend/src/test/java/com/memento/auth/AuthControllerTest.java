@@ -68,15 +68,15 @@ class AuthControllerTest {
 
     @Test
     void loginMapsErrorsToStatusCodes() throws Exception {
-        when(auth.authenticate(anyString(), anyString())).thenThrow(new EmailNotConfirmedException());
+        doThrow(new EmailNotConfirmedException()).when(auth).authenticate(anyString(), anyString());
         mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(VALID_REGISTER))
             .andExpect(status().isForbidden());
 
-        when(auth.authenticate(anyString(), anyString())).thenThrow(new InvalidCredentialsException());
+        doThrow(new InvalidCredentialsException()).when(auth).authenticate(anyString(), anyString());
         mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(VALID_REGISTER))
             .andExpect(status().isUnauthorized());
 
-        when(auth.authenticate(anyString(), anyString())).thenThrow(new TooManyAttemptsException());
+        doThrow(new TooManyAttemptsException()).when(auth).authenticate(anyString(), anyString());
         mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(VALID_REGISTER))
             .andExpect(status().isTooManyRequests());
     }
