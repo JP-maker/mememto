@@ -1,0 +1,36 @@
+@if (account()) {
+  <div class="head">
+    <h1>Mes <span class="mark">leçons</span></h1>
+    <a class="btn" routerLink="/lecon">Nouvelle leçon</a>
+  </div>
+
+  @if (cards().length === 0) {
+    <p class="muted">Aucune leçon pour le moment. Ajoute ta première leçon pour obtenir un plan.</p>
+  } @else {
+    <ul class="list">
+      @for (c of cards(); track c.id) {
+        <li class="card">
+          <div>
+            <h2>{{ c.title }}</h2>
+            <p class="muted">{{ c.meta }}</p>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn" (click)="open(c.id)">Ouvrir</button>
+            @if (confirming() === c.id) {
+              <button type="button" class="btn danger" (click)="remove(c.id)">Confirmer la suppression</button>
+              <button type="button" class="btn ghost" (click)="confirming.set(null)">Annuler</button>
+            } @else {
+              <button type="button" class="btn ghost" (click)="askRemove(c.id)">Supprimer</button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+} @else {
+  <section class="guest">
+    <h1>Mes <span class="mark">leçons</span></h1>
+    <p>Connecte-toi pour retrouver tes leçons sur tous tes appareils. Ta leçon actuelle sera ajoutée à ton compte.</p>
+    <a class="btn" routerLink="/connexion">Se connecter</a>
+  </section>
+}

@@ -1,0 +1,86 @@
+<h1>Ma <span class="mark">leçon</span></h1>
+
+<form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="fields">
+    <fieldset>
+      <legend>1. Le contenu</legend>
+      <label class="f" for="titre">
+        Titre
+        <input type="text" id="titre" formControlName="title" maxlength="120" placeholder="La Révolution française (1789-1799)" />
+      </label>
+      @if (submitted() && form.controls.title.invalid) {
+        <p class="err" role="alert">⚠ Donne un titre à ta leçon.</p>
+      }
+      <label class="f" for="texte">
+        Texte à apprendre
+        <textarea id="texte" formControlName="text" maxlength="20000" placeholder="Colle ici ta leçon, ton poème ou ton texte."></textarea>
+      </label>
+      @if (submitted() && form.controls.text.invalid) {
+        <p class="err" role="alert">⚠ Colle au moins une phrase complète (40 caractères).</p>
+      }
+    </fieldset>
+
+    <fieldset>
+      <legend>2. La méthode</legend>
+      <div class="opts" role="radiogroup" aria-label="Méthode de mémorisation">
+        @for (m of methods; track m.id) {
+          <div class="opt">
+            <input type="radio" name="method" [id]="'m-' + m.id" formControlName="method" [value]="m.id" />
+            <label [for]="'m-' + m.id"><b>{{ m.label }}</b><span>{{ m.summary }}</span></label>
+          </div>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>3. La préparation du texte</legend>
+      <div class="opts two" role="radiogroup" aria-label="Préparation du texte">
+        <div class="opt">
+          <input type="radio" id="prep-auto" name="prep" checked />
+          <label for="prep-auto">
+            <b>Découpage automatique</b>
+            <span>Gratuit. Le texte est coupé par phrases, les mots clés deviennent des trous.</span>
+          </label>
+        </div>
+        <div class="opt">
+          <input type="radio" id="prep-ia" name="prep" disabled />
+          <label for="prep-ia">
+            <b>Avec mon IA <em>(bientôt)</em></b>
+            <span>Tu fournis ta propre clé. Questions, trous et faux choix plus pertinents.</span>
+          </label>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>4. La date</legend>
+      <div class="row2">
+        <label class="f" for="date">
+          Je dois la savoir le
+          <input type="date" id="date" formControlName="deadline" [min]="minDate" />
+        </label>
+        <label class="f" for="mins">
+          Temps disponible par jour
+          <select id="mins" formControlName="minutesPerDay">
+            @for (m of minuteChoices; track m) {
+              <option [ngValue]="m">{{ m }} minutes</option>
+            }
+          </select>
+        </label>
+      </div>
+      @if (submitted() && form.controls.deadline.invalid) {
+        <p class="err" role="alert">⚠ Choisis une date entre demain et dans un an.</p>
+      }
+    </fieldset>
+  </div>
+
+  <aside class="sum" aria-live="polite">
+    <span class="label">Récapitulatif</span>
+    <div class="kv"><span>Longueur</span><b>{{ words() }} mots</b></div>
+    <div class="kv"><span>Jours restants</span><b>{{ daysLeft() > 0 ? daysLeft() : '—' }}</b></div>
+    @if (failed()) {
+      <p class="err" role="alert">⚠ Le plan n'a pas pu être calculé. Réessaie dans un instant.</p>
+    }
+    <button type="submit" class="btn" [disabled]="busy()">Générer mon plan →</button>
+  </aside>
+</form>

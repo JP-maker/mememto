@@ -1,0 +1,53 @@
+# Environnement local. Lancement : cp .env.example .env && docker compose up --build
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      retries: 10
+    # Pas de port publié : seule l'API joint la base.
+
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      # E-mails de compte : en local ils arrivent dans Mailpit (http://localhost:8025), rien ne sort vraiment.
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      APP_BASE_URL: http://localhost:4200
+      # Connexion Google / Microsoft : identifiants à mettre dans .env (jamais dans le dépôt).
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-not-configured}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-not-configured}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-not-configured}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-not-configured}
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    # Pas de port publié : le front proxifie /api vers ce service.
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "127.0.0.1:8025:8025"   # boîte de réception de test, accessible depuis ta machine seulement
+    # Le port SMTP 1025 reste interne : seule l'API y envoie.
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "4200:8080"
+    depends_on:
+      - backend
+
+volumes:
+  db-data:

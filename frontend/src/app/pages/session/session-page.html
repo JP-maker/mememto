@@ -1,0 +1,51 @@
+@switch (status()) {
+  @case ('empty') {
+    <section class="msg">
+      <h1>Pas encore de <span class="mark">séance</span></h1>
+      <p>Ajoute une leçon et une date butoir pour obtenir ton plan.</p>
+      <a class="btn" routerLink="/lecon">Ajouter ma leçon →</a>
+    </section>
+  }
+  @case ('finished') {
+    <section class="msg">
+      <h1>Séance <span class="mark">terminée</span></h1>
+      <p>Bien joué. Reviens à la prochaine séance de ton plan.</p>
+      <a class="btn" routerLink="/plan">Voir mon plan</a>
+    </section>
+  }
+  @case ('rest') {
+    <section class="msg">
+      <h1>Pas de séance <span class="mark">aujourd'hui</span></h1>
+      <p>
+        Le repos fait partie du plan : ta mémoire consolide entre deux séances.
+        @if (nextDay(); as next) {
+          Prochaine séance : {{ next }}.
+        }
+      </p>
+      <a class="btn" routerLink="/plan">Voir mon plan</a>
+    </section>
+  }
+  @case ('short') {
+    <section class="msg">
+      <h1>Texte <span class="mark">trop court</span></h1>
+      <p>Memento n'a pas trouvé assez de phrases pour préparer une séance. Colle un texte plus long.</p>
+      <a class="btn" routerLink="/lecon">Modifier ma leçon</a>
+    </section>
+  }
+  @case ('ready') {
+    @let l = lesson()!;
+    <p class="label">Aujourd'hui · {{ l.minutesPerDay }} min</p>
+    <h1>{{ l.title }}</h1>
+    @switch (l.method) {
+      @case ('ACTIVE_RECALL') {
+        <app-recall-session [items]="items()" [text]="l.text" (finished)="finish()" />
+      }
+      @case ('SPACED_REPETITION') {
+        <app-cards-session [items]="items()" [progress]="l.progress ?? {}" (graded)="grade($event)" (finished)="finish()" />
+      }
+      @case ('FEYNMAN') {
+        <app-feynman-session [items]="items()" (finished)="finish()" />
+      }
+    }
+  }
+}

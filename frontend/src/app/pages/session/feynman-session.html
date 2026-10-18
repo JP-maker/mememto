@@ -1,0 +1,47 @@
+<section class="sess">
+  @switch (phase()) {
+    @case ('explain') {
+      <span class="label">Partie {{ index() + 1 }} sur {{ parts().length }}</span>
+      <h2>Explique cette partie comme à un enfant de 10 ans</h2>
+      <p class="muted">Écris avec tes mots, sans regarder la leçon. Si tu butes, ce passage est à revoir.</p>
+      <p class="muted">Mots à retrouver : <b>{{ hints().join(', ') }}</b></p>
+      <textarea aria-label="Mon explication"></textarea>
+      <div class="row"><button type="button" class="btn" (click)="check()">Vérifier avec la leçon</button></div>
+    }
+    @case ('check') {
+      <span class="label">Partie {{ index() + 1 }} sur {{ parts().length }}</span>
+      <h2>Coche ce que tu as bien expliqué</h2>
+      <ul class="chk">
+        @for (item of part(); track item.id) {
+          <li>
+            <label>
+              <input type="checkbox" [checked]="checked().has(item.id)" (change)="toggle(item.id)" />
+              <span>{{ item.sentence }}</span>
+            </label>
+          </li>
+        }
+      </ul>
+      <p class="muted">Personne ne note à ta place : c'est toi qui juges. Les points non cochés sont à revoir.</p>
+      <div class="row">
+        <button type="button" class="btn" (click)="next()">
+          {{ index() + 1 >= parts().length ? 'Voir le bilan' : 'Partie suivante →' }}
+        </button>
+      </div>
+    }
+    @case ('done') {
+      <span class="label">Bilan</span>
+      @if (missed().length === 0) {
+        <h2>Tout est expliqué</h2>
+        <p class="muted">Tu as pu expliquer chaque partie avec tes mots. Bravo.</p>
+      } @else {
+        <h2>{{ missed().length }} point{{ missed().length > 1 ? 's' : '' }} à revoir</h2>
+        <ul class="chk">
+          @for (item of missed(); track item.id) {
+            <li class="ko"><b>✖ À REVOIR</b>{{ item.sentence }}</li>
+          }
+        </ul>
+      }
+      <div class="row"><button type="button" class="btn" (click)="finished.emit()">Terminer la séance</button></div>
+    }
+  }
+</section>

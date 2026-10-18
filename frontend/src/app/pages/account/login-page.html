@@ -1,0 +1,43 @@
+<section class="auth">
+  <h1>Se <span class="mark">connecter</span></h1>
+
+  <div class="oauth">
+    <!-- Liens ordinaires (pas routerLink) : le navigateur quitte le site pour Google / Microsoft puis revient. -->
+    <a class="btn" href="/oauth2/authorization/google">Continuer avec Google</a>
+    <a class="btn" href="/oauth2/authorization/microsoft">Continuer avec Microsoft</a>
+  </div>
+  @if (providerError) {
+    <p class="err" role="alert">
+      ⚠ Connexion impossible avec ce compte. Google ou Microsoft doit nous transmettre une adresse e-mail vérifiée
+      (compte Microsoft personnel uniquement).
+    </p>
+  }
+  <p class="sep">ou avec ton adresse e-mail</p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <label class="f" for="email">
+      Adresse e-mail
+      <input type="email" id="email" formControlName="email" autocomplete="email" maxlength="254" />
+    </label>
+    @if (submitted() && form.controls.email.invalid) {
+      <p class="err" role="alert">⚠ Saisis une adresse e-mail valide.</p>
+    }
+    <label class="f" for="password">
+      Mot de passe
+      <input type="password" id="password" formControlName="password" autocomplete="current-password" maxlength="128" />
+    </label>
+    @if (submitted() && form.controls.password.invalid) {
+      <p class="err" role="alert">⚠ Saisis ton mot de passe.</p>
+    }
+    @if (error()) {
+      <p class="err" role="alert">⚠ {{ error() }}</p>
+    }
+    <button type="submit" class="btn" [disabled]="busy()">Se connecter</button>
+  </form>
+
+  <p class="links">
+    <a routerLink="/mot-de-passe-oublie">Mot de passe oublié ?</a>
+    <a routerLink="/inscription">Créer un compte</a>
+  </p>
+  <p class="hint">Tu peux aussi continuer sans compte : tes leçons restent alors sur cet appareil.</p>
+</section>

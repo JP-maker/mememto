@@ -1,0 +1,89 @@
+// Jetons de couleur : bleu + jaune (lisibles en cas de daltonisme rouge/vert).
+// L'état n'est jamais porté par la couleur seule : toujours un texte ou un symbole en plus.
+:root {
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --ink: #121a2b;
+  --muted: #56617a;
+  --line: #d5dbe8;
+  --accent: #2b5bd7;
+  --accent-ink: #ffffff;
+  --mark: #f5d547;
+  --soft: #e6ecfa;
+  --error: #b3261e; // toujours accompagné d'un ⚠ et d'un texte
+  // Polices hébergées dans le projet (paquets @fontsource), avec repli sur les polices système.
+  --font-display: 'Bricolage Grotesque Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Instrument Sans Variable', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, Consolas, monospace;
+  --radius: 10px;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0c1220;
+    --surface: #151d30;
+    --ink: #e8ecf6;
+    --muted: #9aa6c0;
+    --line: #28324a;
+    --accent: #7aa2ff;
+    --accent-ink: #0c1220;
+    --soft: #1c2742;
+    --error: #ff9c94;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.55 var(--font-body);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0;
+  text-wrap: balance;
+}
+
+:focus-visible {
+  outline: 3px solid var(--mark);
+  outline-offset: 2px;
+}
+
+// Surligneur jaune : le geste graphique de la marque.
+.mark {
+  background: linear-gradient(transparent 55%, var(--mark) 55% 92%, transparent 92%);
+  padding: 0 0.1em;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 600 1rem var(--font-body);
+  text-decoration: none;
+  cursor: pointer;
+
+  &.ghost {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--line);
+  }
+}

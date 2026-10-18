@@ -1,0 +1,21 @@
+<section class="auth">
+  <h1>Confirmation de l'<span class="mark">adresse</span></h1>
+  @switch (state()) {
+    @case ('checking') {
+      <p role="status">Vérification en cours…</p>
+    }
+    @case ('ok') {
+      <p class="ok" role="status">✔ Adresse confirmée. Tu peux maintenant te connecter.</p>
+      <a class="btn" routerLink="/connexion">Se connecter</a>
+    }
+    @case ('error') {
+      <p class="err" role="alert">⚠ Ce lien n'est plus valable (expiré ou déjà utilisé).</p>
+      <p class="hint">Recrée un compte avec la même adresse pour recevoir un nouveau lien.</p>
+      <a class="btn" routerLink="/inscription">Créer un compte</a>
+    }
+    @case ('missing') {
+      <p>Ouvre le lien reçu par e-mail pour confirmer ton adresse.</p>
+      <a class="btn" routerLink="/connexion">Retour à la connexion</a>
+    }
+  }
+</section>

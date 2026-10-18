@@ -1,0 +1,469 @@
+<title>Memento</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Concept : une page = une action. Bleu + jaune (paire sûre pour le daltonisme rouge/vert), surligneur jaune comme geste graphique. L'état n'est jamais porté par la couleur seule. */
+:root{
+  --bg:#F4F6FA; --surface:#FFFFFF; --ink:#121A2B; --muted:#56617A; --line:#D5DBE8;
+  --accent:#2B5BD7; --accent-ink:#FFFFFF; --mark:#F5D547; --mark-ink:#121A2B; --soft:#E6ECFA;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Instrument Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0C1220; --surface:#151D30; --ink:#E8ECF6; --muted:#9AA6C0; --line:#28324A;
+  --accent:#7AA2FF; --accent-ink:#0C1220; --soft:#1C2742; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1220; --surface:#151D30; --ink:#E8ECF6; --muted:#9AA6C0; --line:#28324A;
+  --accent:#7AA2FF; --accent-ink:#0C1220; --soft:#1C2742; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--f-body);
+  padding-block:0 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1080px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-.02em}
+h1{font-size:clamp(2.4rem,6vw,4.2rem);font-weight:700}
+h2{font-size:clamp(1.6rem,3.5vw,2.3rem)}
+h3{font-size:1.2rem}
+p{margin:0}
+.mark{background:linear-gradient(transparent 55%,var(--mark) 55% 92%,transparent 92%);color:inherit;padding:0 .1em}
+.muted{color:var(--muted)}
+.label{font:500 .75rem var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+/* nav */
+nav{display:flex;align-items:center;gap:8px;padding-block:18px;flex-wrap:wrap}
+nav .logo{font:700 1.3rem var(--f-display);margin-right:auto;cursor:pointer;background:none;border:0;color:var(--ink);padding:0}
+nav button.tab{background:none;border:1px solid transparent;color:var(--muted);padding:8px 14px;border-radius:99px;font:500 .9rem var(--f-body);cursor:pointer}
+nav button.tab[aria-current="page"]{border-color:var(--line);color:var(--ink);background:var(--surface)}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:13px 22px;font:600 1rem var(--f-body);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+.view{display:none;padding-top:24px}.view.on{display:block}
+/* landing */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;padding-block:32px 72px}
+.hero p.lead{font-size:1.15rem;color:var(--muted);max-width:46ch;margin-block:20px 28px}
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:grid;gap:14px;box-shadow:0 12px 40px -20px rgba(16,32,28,.35)}
+.demo .txt{font-size:1.05rem;line-height:1.9}
+.blank{display:inline-block;min-width:5.5ch;border-bottom:2px solid var(--accent);color:transparent;user-select:none}
+.bar{height:8px;background:var(--soft);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent)}
+section.block{padding-block:56px;border-top:1px solid var(--line)}
+section.block>h2{margin-bottom:12px}
+.steps,.methods{display:grid;gap:20px;grid-template-columns:repeat(3,1fr);margin-top:32px}
+.step{display:grid;gap:8px}
+.step .label{color:var(--accent)}
+.mcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:10px;align-content:start}
+.tag{justify-self:start;font:500 .75rem var(--f-mono);background:var(--soft);color:var(--accent);padding:3px 9px;border-radius:99px}
+.sci{font-size:.85rem;color:var(--muted)}
+/* lesson form */
+.form{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:32px;align-items:start}
+fieldset{border:0;padding:0;margin:0 0 32px;display:grid;gap:12px;min-width:0}
+legend{font:700 1.25rem var(--f-display);padding:0;margin-bottom:12px}
+label.f{display:grid;gap:6px;font-weight:600;font-size:.9rem}
+input[type=text],input[type=date],textarea,select{width:100%;font:400 1rem var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+textarea{min-height:240px;resize:vertical}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.opt{position:relative}
+.opt input{position:absolute;opacity:0}
+.opt label{display:grid;gap:6px;height:100%;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;align-content:start}
+.opt input:checked+label{border-color:var(--accent);background:var(--soft)}
+.opt input:focus-visible+label{outline:3px solid var(--mark);outline-offset:2px}
+.opt b{font-family:var(--f-display);font-size:1.05rem}.opt span{font-size:.88rem;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+aside.sum{position:sticky;top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:14px}
+.kv{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dashed var(--line);padding-bottom:8px}
+.kv b{font:500 1rem var(--f-mono);font-variant-numeric:tabular-nums}
+.err{color:#B3261E;font-size:.85rem;min-height:1.2em}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .err{color:#FF9C94}}
+:root[data-theme="dark"] .err{color:#FF9C94}
+/* plan */
+.phead{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:end;margin-bottom:24px}
+.days{display:grid;gap:10px}
+.day{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.day .d{font:500 .9rem var(--f-mono);font-variant-numeric:tabular-nums}
+.day.today{border-color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}
+.day.rest{background:transparent;border-style:dashed;color:var(--muted)}
+.day.final{background:var(--soft)}
+.pill{font:500 .75rem var(--f-mono);padding:3px 10px;border-radius:99px;background:var(--soft);color:var(--accent);white-space:nowrap}
+.day.final .pill{background:var(--mark);color:var(--mark-ink)}
+.note{margin-top:28px;font-size:.9rem;color:var(--muted);max-width:70ch}
+.lnk{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;font:inherit;cursor:pointer}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:99px;padding:3px;background:var(--surface);flex-wrap:wrap}
+.seg button{border:0;background:none;color:var(--muted);padding:7px 14px;border-radius:99px;font:500 .85rem var(--f-body);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.sess{max-width:720px;margin:28px auto 0;display:grid;gap:16px}
+.sess textarea{min-height:200px}
+.big{font:500 1.5rem/1.5 var(--f-display)}
+.cardx{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px;display:grid;gap:18px;justify-items:start}
+.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;width:100%}
+.grade .btn{flex-direction:column;gap:2px;background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.grade small{font:400 .78rem var(--f-mono);color:var(--muted)}
+.chk{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.chk li{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:8px;padding:10px 14px}
+.chk li.ko{border-left:6px dashed var(--ink)}
+.chk b{font:500 .8rem var(--f-mono);margin-right:8px}
+.auth{max-width:420px;margin:24px auto;display:grid;gap:14px;text-align:center}
+.auth .btn{justify-content:center;width:100%}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:.85rem}.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.day.click{cursor:pointer}
+.auth form{display:grid;gap:12px;text-align:left}
+.site-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}
+.site-footer p{margin:0}.footer-links{display:flex;flex-wrap:wrap;gap:8px}
+.footer-links .btn{padding:10px 18px;text-decoration:none}
+.qr{width:200px;height:200px;max-width:100%;border:2px dashed var(--line);border-radius:12px;display:grid;place-items:center;color:var(--muted);font-size:.85rem;margin:8px auto}
+.qcm{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.q{text-align:left;background:var(--surface);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:14px 16px;font:500 1rem var(--f-body);cursor:pointer}
+.q:disabled{cursor:default}
+.q.ok{border-style:solid;border-color:var(--accent);background:var(--soft)}.q.ok::before{content:"✔ "}
+.q.ko{border-style:dashed;border-color:var(--ink)}.q.ko::before{content:"✖ "}
+@media (max-width:520px){.qcm{grid-template-columns:1fr}}
+@media (max-width:820px){
+  .hero,.form{grid-template-columns:1fr}.steps,.methods,.opts{grid-template-columns:1fr}
+  aside.sum{position:static}.day{grid-template-columns:78px minmax(0,1fr)}.day .pill{grid-column:2;justify-self:start}
+}
+@media (prefers-reduced-motion:no-preference){.view.on{animation:in .25s ease-out}@keyframes in{from{opacity:.4;transform:translateY(6px)}}}
+</style>
+
+<div class="wrap">
+<nav>
+  <button class="logo" data-go="accueil">Memento<span class="mark">.</span></button>
+  <button class="tab" data-go="accueil">Accueil</button>
+  <button class="tab" data-go="lecons">Mes leçons</button>
+  <button class="tab" data-go="lecon">Nouvelle leçon</button>
+  <button class="tab" data-go="plan">Plan</button>
+  <button class="tab" data-go="seance">Séance</button>
+  <button class="btn ghost" style="padding:8px 16px" data-go="connexion">Connexion</button>
+</nav>
+
+<!-- PAGE 1 : LANDING -->
+<main id="v-accueil" class="view on">
+  <div class="hero">
+    <div>
+      <p class="label" style="margin-bottom:14px">Mémoriser sans bachoter</p>
+      <h1>Colle ta leçon. Donne ta date. <span class="mark">On fait le plan.</span></h1>
+      <p class="lead">Memento découpe le travail sur les jours qui restent avant ton contrôle, avec la méthode de mémorisation que tu choisis.</p>
+      <button class="btn" data-go="lecon">Ajouter ma leçon →</button>
+      <button class="btn ghost" onclick="document.getElementById('methodes').scrollIntoView({behavior:'smooth'})">Voir les 3 méthodes</button>
+    </div>
+    <div class="demo" aria-label="Exemple d'exercice">
+      <span class="label">Exemple · Révolution française</span>
+      <p class="txt">La prise de la <span class="blank">Bastille</span> a lieu le 14 juillet <span class="blank">1789</span>. L'Assemblée vote ensuite la Déclaration des <span class="blank">droits</span> de l'homme.</p>
+      <div class="row2" style="align-items:center"><div class="bar"><i style="width:62%"></i></div><span class="label">J-9 · 62 % retenu</span></div>
+    </div>
+  </div>
+
+  <section class="block">
+    <h2>Trois étapes</h2>
+    <div class="steps">
+      <div class="step"><span class="label">1 · Coller</span><h3>Ta leçon</h3><p class="muted">Un cours, un poème, un texte à réciter. Memento le prépare par découpage en phrases (gratuit), ou avec ton IA personnelle si tu fournis ta clé, pour des questions et des choix multiples plus pertinents.</p></div>
+      <div class="step"><span class="label">2 · Choisir</span><h3>Méthode et date</h3><p class="muted">Tu indiques comment tu veux travailler et quand tu dois savoir la leçon.</p></div>
+      <div class="step"><span class="label">3 · Suivre</span><h3>Un plan jour par jour</h3><p class="muted">Chaque jour affiche une séance courte. Les derniers jours sont consacrés aux révisions.</p></div>
+    </div>
+  </section>
+
+  <section class="block" id="methodes">
+    <h2>Trois méthodes, choisies pour leurs preuves</h2>
+    <p class="muted" style="max-width:62ch">Toutes reposent sur l'effort de se rappeler plutôt que sur la relecture. Les séances sont espacées dans le temps quelle que soit la méthode.</p>
+    <div class="methods">
+      <article class="mcard"><span class="tag">Se tester</span><h3>Rappel actif</h3><p>Tu fermes la leçon, tu écris tout ce dont tu te souviens, puis tu compares avec l'original.</p><p class="sci">Efficacité jugée « élevée » (Dunlosky et al., 2013).</p></article>
+      <article class="mcard"><span class="tag">Revenir au bon moment</span><h3>Répétition espacée</h3><p>Le texte devient des cartes. Celles que tu rates reviennent vite, les autres s'éloignent.</p><p class="sci">Efficacité jugée « élevée » (Dunlosky et al., 2013).</p></article>
+      <article class="mcard"><span class="tag">Expliquer</span><h3>Technique de Feynman</h3><p>Tu expliques la leçon avec tes mots, comme à un enfant. Les passages où tu hésites montrent ce qu'il reste à revoir.</p><p class="sci">Repose sur l'auto-explication, jugée « modérée ».</p></article>
+    </div>
+  </section>
+  <section class="block" style="text-align:center"><h2 style="margin-bottom:20px">Prêt pour ton prochain contrôle ?</h2><button class="btn" data-go="lecon">Ajouter ma leçon →</button></section>
+</main>
+
+<!-- PAGE 2 : SAISIE -->
+<main id="v-lecon" class="view">
+  <h1 style="font-size:clamp(2rem,4vw,2.8rem);margin-bottom:28px">Ma <span class="mark">leçon</span></h1>
+  <form class="form" id="form" novalidate>
+    <div>
+      <fieldset>
+        <legend>1. Le contenu</legend>
+        <label class="f" for="titre">Titre<input type="text" id="titre" maxlength="120" value="La Révolution française (1789-1799)"></label>
+        <label class="f" for="texte">Texte à apprendre<textarea id="texte" maxlength="20000">La prise de la Bastille a lieu le 14 juillet 1789. Le 26 août, l'Assemblée constituante vote la Déclaration des droits de l'homme et du citoyen. En 1792, la Première République est proclamée. Louis XVI est guillotiné le 21 janvier 1793. La Terreur s'achève avec la chute de Robespierre en juillet 1794.</textarea></label>
+        <div class="err" id="e-texte"></div>
+      </fieldset>
+      <fieldset>
+        <legend>2. La méthode</legend>
+        <div class="opts" role="radiogroup">
+          <div class="opt"><input type="radio" name="m" id="m1" value="Rappel actif" checked><label for="m1"><b>Rappel actif</b><span>Écrire de mémoire, puis comparer.</span></label></div>
+          <div class="opt"><input type="radio" name="m" id="m2" value="Répétition espacée"><label for="m2"><b>Répétition espacée</b><span>Cartes qui reviennent selon tes erreurs.</span></label></div>
+          <div class="opt"><input type="radio" name="m" id="m3" value="Feynman"><label for="m3"><b>Technique de Feynman</b><span>Expliquer avec tes mots.</span></label></div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>3. La préparation du texte</legend>
+        <div class="opts" style="grid-template-columns:1fr 1fr">
+          <div class="opt"><input type="radio" name="gen" id="g1" value="auto" checked><label for="g1"><b>Découpage automatique</b><span>Gratuit. Le texte est coupé par phrases, les mots clés deviennent des trous. Les faux choix des QCM viennent d'autres mots de ta leçon.</span></label></div>
+          <div class="opt"><input type="radio" name="gen" id="g2" value="ia"><label for="g2"><b>Avec mon IA</b><span>Tu fournis ta propre clé. Questions, trous et faux choix des QCM plus pertinents.</span></label></div>
+        </div>
+        <div id="ia" class="row2" hidden>
+          <label class="f" for="prov">Fournisseur<select id="prov"><option>Anthropic</option><option>OpenAI</option><option>Mistral</option></select></label>
+          <label class="f" for="cle">Clé API<input type="password" id="cle" autocomplete="off" placeholder="sk-…"></label>
+          <p class="sci" style="grid-column:1/-1">Ta clé est envoyée à notre serveur le temps de la génération. Elle n'est ni enregistrée ni écrite dans les journaux.</p>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>4. La date</legend>
+        <div class="row2">
+          <label class="f" for="date">Je dois la savoir le<input type="date" id="date"></label>
+          <label class="f" for="mins">Temps disponible par jour<select id="mins"><option value="10">10 minutes</option><option value="20" selected>20 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option></select></label>
+        </div>
+        <div class="err" id="e-date"></div>
+      </fieldset>
+    </div>
+    <aside class="sum" aria-live="polite">
+      <span class="label">Récapitulatif</span>
+      <div class="kv"><span>Longueur</span><b id="s-mots">0 mots</b></div>
+      <div class="kv"><span>Jours restants</span><b id="s-jours">0</b></div>
+      <div class="kv"><span>Séances</span><b id="s-seances">0</b></div>
+      <button type="submit" class="btn">Générer mon plan →</button>
+    </aside>
+  </form>
+</main>
+
+<!-- PAGE 3 : PLAN -->
+<main id="v-plan" class="view">
+  <div class="phead">
+    <div><span class="label" id="p-meta"></span><h1 style="font-size:clamp(2rem,4vw,2.8rem);margin-top:8px" id="p-titre"></h1></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" data-go="lecon">Modifier</button><button class="btn" data-go="seance">Commencer la séance du jour →</button></div>
+  </div>
+  <p class="sci" style="margin-bottom:16px">Mode invité : ce plan reste sur cet appareil. <button class="lnk" data-go="connexion">Se connecter pour le garder</button></p>
+  <div class="days" id="days"></div>
+  <p class="note">Maquette : le calcul des séances est simplifié (révisions à J+1, J+3, J+7 puis tous les 7 jours, et la veille). Le vrai algorithme sera défini côté Spring Boot.</p>
+</main>
+<!-- PAGE 4 : SÉANCE (3 variantes selon la méthode) -->
+<main id="v-seance" class="view">
+  <div class="phead">
+    <div><span class="label">Aujourd'hui · séance 1 sur 6 · 20 min</span><h1 style="font-size:clamp(2rem,4vw,2.8rem);margin-top:8px">La Révolution française</h1></div>
+    <div class="seg" role="group" aria-label="Aperçu des trois méthodes">
+      <button data-panel="a" aria-pressed="true">Rappel actif</button><button data-panel="b" aria-pressed="false">Cartes</button><button data-panel="c" aria-pressed="false">Feynman</button>
+    </div>
+  </div>
+  <div class="bar" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" aria-label="Avancement de la séance"><i style="width:25%"></i></div>
+
+  <section class="panel sess" id="pn-a">
+    <span class="label">Étape 2 sur 3 · Écrire de mémoire</span>
+    <h2>Qu'est-ce que tu retiens de la leçon ?</h2>
+    <p class="muted">Le texte est masqué. Écris tout ce qui te revient, même en désordre.</p>
+    <textarea id="ra" aria-label="Ce que je retiens">La Bastille est prise en 1789. Ensuite la République en 1792…</textarea>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn" data-reveal="ra-res">Comparer avec la leçon</button><span class="label">Temps conseillé 03:00</span></div>
+    <div id="ra-res" hidden>
+      <h3 style="margin-bottom:10px">Résultat : 3 idées sur 5</h3>
+      <ul class="chk">
+        <li><b>✔ RETROUVÉ</b>Prise de la Bastille, 14 juillet 1789</li>
+        <li><b>✔ RETROUVÉ</b>Première République proclamée en 1792</li>
+        <li><b>✔ RETROUVÉ</b>Déclaration des droits de l'homme</li>
+        <li class="ko"><b>✖ OUBLIÉ</b>Louis XVI guillotiné le 21 janvier 1793</li>
+        <li class="ko"><b>✖ OUBLIÉ</b>Chute de Robespierre en juillet 1794</li>
+      </ul>
+      <p class="sci" style="margin-top:10px">Les idées oubliées reviennent en priorité à la prochaine séance.</p>
+    </div>
+  </section>
+
+  <section class="panel sess" id="pn-b" hidden>
+    <div class="cardx">
+      <div class="seg" role="group" aria-label="Type de réponse"><button data-mode="qcm" aria-pressed="true">Choix multiples</button><button data-mode="free" aria-pressed="false">Réponse libre</button></div>
+      <span class="label">Carte 3 sur 12</span>
+      <p class="big">Le 21 janvier 1793, <span class="blank">?????</span> est guillotiné.</p>
+      <div id="rb-qcm" class="qcm">
+        <button class="q">Louis XIV</button>
+        <button class="q" data-ok="1">Louis XVI</button>
+        <button class="q">Robespierre</button>
+        <button class="q">Danton</button>
+      </div>
+      <p id="rb-fb" class="muted" hidden></p>
+      <p class="sci">Si la leçon n'a pas assez de mots clés pour proposer 4 choix, la carte passe automatiquement en réponse libre.</p>
+      <div id="rb-free" hidden style="display:grid;gap:18px;justify-items:start;width:100%">
+      <button class="btn" data-reveal="rb-ans">Afficher la réponse</button>
+      <div id="rb-ans" hidden style="width:100%;display:grid;gap:16px">
+        <p class="big"><span class="mark">Louis XVI</span></p>
+        <p class="muted">As-tu su répondre ?</p>
+        <div class="grade">
+          <button class="btn">À revoir<small>dans 10 min</small></button>
+          <button class="btn">Difficile<small>demain</small></button>
+          <button class="btn">Bien<small>dans 3 jours</small></button>
+          <button class="btn">Facile<small>dans 7 jours</small></button>
+        </div>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel sess" id="pn-c" hidden>
+    <span class="label">Partie 3 sur 4 · La Terreur</span>
+    <h2>Explique la Terreur comme à un enfant de 10 ans</h2>
+    <p class="muted">Écris avec tes mots, sans regarder la leçon. Si tu butes, c'est que ce passage est à revoir.</p>
+    <textarea id="rc" aria-label="Mon explication">La Terreur, c'est une période où le pouvoir avait très peur de ses ennemis…</textarea>
+    <button class="btn" data-reveal="rc-res">Vérifier avec la leçon</button>
+    <div id="rc-res" hidden>
+      <h3 style="margin-bottom:10px">Coche ce que tu as bien expliqué</h3>
+      <ul class="chk" style="list-style:none">
+        <li><label><input type="checkbox" checked> La Terreur commence après la proclamation de la République</label></li>
+        <li><label><input type="checkbox"> Elle s'achève avec la chute de Robespierre en 1794</label></li>
+      </ul>
+      <p class="sci" style="margin-top:10px">Personne ne note à ta place : c'est toi qui juges. Les points non cochés sont repris à la prochaine séance.</p>
+    </div>
+  </section>
+</main>
+
+<!-- PAGE 5 : CONNEXION -->
+<main id="v-connexion" class="view">
+  <div class="auth">
+    <h1 style="font-size:clamp(2rem,4vw,2.6rem)">Se <span class="mark">connecter</span></h1>
+    <p class="muted">Retrouve tes leçons et ton plan sur tous tes appareils.</p>
+    <form id="f-login" novalidate>
+      <label class="f" for="l-mail">Adresse e-mail<input type="text" id="l-mail" autocomplete="email" placeholder="toi@exemple.fr"></label>
+      <label class="f" for="l-pw">Mot de passe<input type="password" id="l-pw" autocomplete="current-password"></label>
+      <button type="submit" class="btn">Se connecter</button>
+      <p class="sci"><button type="button" class="lnk">Mot de passe oublié ?</button> · <button type="button" class="lnk" data-go="inscription">Créer un compte</button></p>
+    </form>
+    <div class="or">ou</div>
+    <button class="btn ghost" data-go="lecons">Continuer avec Google</button>
+    <button class="btn ghost" data-go="lecons">Continuer avec Microsoft</button>
+    <div class="or">ou</div>
+    <button class="btn" data-go="lecon">Continuer en invité</button>
+    <p class="sci">En mode invité, tes leçons restent sur cet appareil et disparaissent si tu vides les données du navigateur.</p>
+  </div>
+</main>
+
+<!-- PAGE 6 : MES LEÇONS -->
+<main id="v-lecons" class="view">
+  <div class="phead"><h1 style="font-size:clamp(2rem,4vw,2.8rem)">Mes <span class="mark">leçons</span></h1><button class="btn" data-go="lecon">Nouvelle leçon</button></div>
+  <div id="imp" class="demo" style="margin-bottom:16px;grid-template-columns:1fr auto;align-items:center">
+    <p><b>2 leçons trouvées sur cet appareil.</b> <span class="muted">Ajoute-les à ton compte pour ne pas les perdre.</span></p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="$('imp').hidden=true">Importer</button><button class="btn ghost" onclick="$('imp').hidden=true">Plus tard</button></div>
+  </div>
+  <div class="days">
+    <div class="day today click" data-go="plan"><span class="d">J-14</span><span><b>La Révolution française</b><br><span class="muted">Rappel actif · séance du jour à faire</span></span><span class="pill">0 %</span></div>
+    <div class="day click" data-go="plan"><span class="d">J-9</span><span><b>Irregular verbs (unit 4)</b><br><span class="muted">Répétition espacée · 12 cartes dues</span></span><span class="pill">62 %</span></div>
+    <div class="day final click" data-go="plan"><span class="d">J-2</span><span><b>Le poème « Demain, dès l'aube »</b><br><span class="muted">Feynman · dernière révision</span></span><span class="pill">91 %</span></div>
+  </div>
+</main>
+<!-- PAGE 7 : INSCRIPTION -->
+<main id="v-inscription" class="view">
+  <div class="auth">
+    <h1 style="font-size:clamp(2rem,4vw,2.6rem)">Créer un <span class="mark">compte</span></h1>
+    <p class="muted">Une adresse e-mail et un mot de passe suffisent.</p>
+    <form id="f-signup" novalidate>
+      <label class="f" for="s-mail">Adresse e-mail<input type="text" id="s-mail" autocomplete="email" placeholder="toi@exemple.fr"></label>
+      <label class="f" for="s-pw">Mot de passe<input type="password" id="s-pw" autocomplete="new-password"></label>
+      <p class="sci" style="margin-top:-6px">12 caractères minimum. Une phrase de passe longue est la meilleure option.</p>
+      <label class="f" for="s-pw2">Confirme le mot de passe<input type="password" id="s-pw2" autocomplete="new-password"></label>
+      <div class="err" id="e-signup"></div>
+      <button type="submit" class="btn">Créer mon compte</button>
+    </form>
+    <p class="sci">Déjà un compte ? <button type="button" class="lnk" data-go="connexion">Se connecter</button></p>
+  </div>
+</main>
+
+<!-- PAGE 8 : CONFIRMATION DE L'ADRESSE -->
+<main id="v-verif" class="view">
+  <div class="auth">
+    <h1 style="font-size:clamp(2rem,4vw,2.6rem)">Vérifie ta <span class="mark">boîte mail</span></h1>
+    <p class="muted">Nous avons envoyé un lien de confirmation à <b id="vm">toi@exemple.fr</b>. Il est valable 24 heures. Tu pourras te connecter une fois ton adresse confirmée.</p>
+    <button class="btn ghost" id="resend">Renvoyer l'e-mail</button>
+    <p class="sci" id="resent" hidden>E-mail renvoyé. Pense à regarder tes courriers indésirables.</p>
+    <button class="lnk" data-go="connexion">Retour à la connexion</button>
+  </div>
+</main>
+
+<!-- PAGE 9 : DON -->
+<main id="v-don" class="view">
+  <div class="auth">
+    <h1 style="font-size:clamp(2rem,4vw,2.6rem)">Soutenir <span class="mark">Memento</span></h1>
+    <p class="muted">Memento est un projet personnel, gratuit et sans publicité. Si le site t'est utile, tu peux m'offrir un café.</p>
+    <div class="qr" role="img" aria-label="Emplacement du QR code de don">QR code de don</div>
+    <p class="sci">Scanne ce code avec l'appareil photo de ton téléphone. Le montant est libre. Merci !</p>
+    <button class="lnk" data-go="accueil">← Retour à l'accueil</button>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-links">
+    <a class="btn" href="mailto:contact@memento.fr?subject=Contact%20Memento">Me contacter</a>
+    <button class="btn ghost" data-go="don">Faire un don</button>
+  </div>
+  <p>© 2026 Jean-Philippe Carrazé</p>
+  <p class="version" title="Version de l'application">Memento v0.1.0</p>
+</footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id), DAY=864e5;
+const fmt=d=>d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'});
+const iso=d=>d.toISOString().slice(0,10);
+const today=new Date(); today.setHours(0,0,0,0);
+$('date').min=iso(new Date(today.getTime()+DAY)); $('date').value=iso(new Date(today.getTime()+14*DAY));
+
+const TASK={ // séance proposée selon la méthode
+ 'Rappel actif':['Lis la leçon deux fois, puis écris-la de mémoire','Écris de mémoire, compare, corrige','Écris de mémoire sans relire avant'],
+ 'Répétition espacée':['Crée tes cartes et fais un premier tour','Cartes dues aujourd\'hui','Cartes dues, en insistant sur les ratées'],
+ 'Feynman':['Explique chaque partie avec tes mots','Réexplique en repérant tes hésitations','Explique l\'ensemble à voix haute, sans notes']};
+
+function nbJours(){const d=new Date($('date').value+'T00:00');return Math.round((d-today)/DAY)}
+function plan(n){ // index 0 = aujourd'hui, n = jour J
+  const rev=new Set([1,3,7]); for(let i=14;i<n;i+=7)rev.add(i); rev.add(n-1);
+  return Array.from({length:n+1},(_,i)=>i===0?'learn':i===n?'final':rev.has(i)?'rev':'rest');
+}
+function sum(){
+  const mots=($('texte').value.trim().match(/\S+/g)||[]).length, n=nbJours();
+  $('s-mots').textContent=mots+' mots'; $('s-jours').textContent=n>0?n:'—';
+  $('s-seances').textContent=n>0?plan(n).filter(t=>t!=='rest').length:'—';
+}
+['texte','date','mins'].forEach(i=>$(i).addEventListener('input',sum)); sum();
+
+function render(){
+  const n=nbJours(), m=document.querySelector('input[name=m]:checked').value, mins=$('mins').value, p=plan(n);
+  $('p-titre').textContent=$('titre').value||'Ma leçon';
+  $('p-meta').textContent=`${m} · ${mins} min/jour · J-${n}`;
+  $('days').innerHTML=p.map((t,i)=>{
+    const d=new Date(today.getTime()+i*DAY), T=TASK[m];
+    const txt={learn:T[0],rev:i===n-1?T[2]:T[1],rest:'Pas de séance',final:'Test final : récite toute la leçon'}[t];
+    const pill={learn:mins+' min',rev:Math.max(5,Math.round(mins/2))+' min',rest:'repos',final:'jour J'}[t];
+    const el=document.createElement('div'); el.className='day '+t+(i===0?' today':'');
+    el.innerHTML=`<span class="d"></span><span></span><span class="pill"></span>`;
+    el.children[0].textContent=i===0?"Aujourd'hui":fmt(d); el.children[1].textContent=txt; el.children[2].textContent=pill;
+    return el.outerHTML}).join('');
+}
+function go(v){
+  document.querySelectorAll('.view').forEach(e=>e.classList.toggle('on',e.id==='v-'+v));
+  document.querySelectorAll('nav .tab').forEach(b=>b.dataset.go===v?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));
+  if(v==='plan')render();
+  if(v==='seance')document.querySelector('[data-panel="'+{'Rappel actif':'a','Répétition espacée':'b','Feynman':'c'}[document.querySelector('input[name=m]:checked').value]+'"]').click();
+  window.scrollTo(0,0);
+  try{history.replaceState(null,'','#'+v)}catch(e){}
+}
+document.querySelectorAll('[data-panel]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.panel').forEach(p=>p.hidden=p.id!=='pn-'+b.dataset.panel);
+  document.querySelectorAll('[data-panel]').forEach(t=>t.setAttribute('aria-pressed',String(t===b)));
+}));
+document.querySelectorAll('[data-reveal]').forEach(b=>b.addEventListener('click',()=>{$(b.dataset.reveal).hidden=false;b.hidden=true}));
+document.querySelectorAll('input[name=gen]').forEach(r=>r.addEventListener('change',()=>{$('ia').hidden=!$('g2').checked}));
+document.querySelectorAll('.q').forEach(q=>q.addEventListener('click',()=>{
+  document.querySelectorAll('.q').forEach(b=>{b.disabled=true;if(b.dataset.ok)b.classList.add('ok')});
+  if(!q.dataset.ok)q.classList.add('ko');
+  $('rb-fb').hidden=false;
+  $('rb-fb').textContent=q.dataset.ok?'Bonne réponse. Cette carte revient dans 3 jours.':'Pas tout à fait : la réponse est Louis XVI. Cette carte revient dans 10 minutes.';
+}));
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{
+  const free=b.dataset.mode==='free'; $('rb-qcm').hidden=free; $('rb-free').hidden=!free; $('rb-fb').hidden=true;
+  document.querySelectorAll('[data-mode]').forEach(t=>t.setAttribute('aria-pressed',String(t===b)));
+}));
+$('f-login').addEventListener('submit',e=>{e.preventDefault();go('lecons')});
+$('f-signup').addEventListener('submit',e=>{
+  e.preventDefault();
+  const m=$('s-mail').value.trim(), p=$('s-pw').value;
+  const msg=!/^\S+@\S+\.\S+$/.test(m)?'⚠ Saisis une adresse e-mail valide.':p.length<12?'⚠ Le mot de passe doit faire 12 caractères minimum.':p!==$('s-pw2').value?'⚠ Les deux mots de passe sont différents.':'';
+  $('e-signup').textContent=msg;
+  if(!msg){$('vm').textContent=m;go('verif')}
+});
+$('resend').addEventListener('click',()=>{$('resent').hidden=false});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)go(b.dataset.go)});
+$('form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const okT=$('texte').value.trim().length>=40, okD=nbJours()>=1;
+  $('e-texte').textContent=okT?'':'⚠ Colle au moins une phrase complète (40 caractères).';
+  $('e-date').textContent=okD?'':'⚠ Choisis une date à partir de demain.';
+  if(okT&&okD)go('plan');
+});
+go(['accueil','lecon','plan','seance','connexion','lecons','inscription','verif','don'].includes(location.hash.slice(1))?location.hash.slice(1):'accueil');
+</script>

@@ -1,0 +1,66 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/memento}
+    username: ${DB_USER:memento}
+    password: ${DB_PASSWORD}   # obligatoire : aucune valeur par défaut volontairement
+  jpa:
+    open-in-view: false
+    hibernate.ddl-auto: validate   # le schéma est géré par Flyway uniquement
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:not-configured}
+            client-secret: ${GOOGLE_CLIENT_SECRET:not-configured}
+            scope: openid,email,profile
+            redirect-uri: ${APP_BASE_URL:http://localhost:4200}/login/oauth2/code/google
+          microsoft:
+            provider: microsoft
+            client-name: Microsoft
+            client-id: ${MICROSOFT_CLIENT_ID:not-configured}
+            client-secret: ${MICROSOFT_CLIENT_SECRET:not-configured}
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            scope: openid,email,profile
+            redirect-uri: ${APP_BASE_URL:http://localhost:4200}/login/oauth2/code/microsoft
+        provider:
+          # Comptes Microsoft personnels uniquement (endpoint « consumers ») : voir OAuthIdentity.
+          microsoft:
+            authorization-uri: https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize
+            token-uri: https://login.microsoftonline.com/consumers/oauth2/v2.0/token
+            jwk-set-uri: https://login.microsoftonline.com/consumers/discovery/v2.0/keys
+            user-info-uri: https://graph.microsoft.com/oidc/userinfo
+            user-name-attribute: sub
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USER:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_AUTH:false}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS:false}
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+
+server:
+  tomcat:
+    use-relative-redirects: true   # les redirections restent valables derrière nginx (hôte et port publics)
+  error:
+    include-stacktrace: never
+    include-message: never
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${COOKIE_SECURE:false}   # true dès qu'on passe en HTTPS
+
+memento:
+  base-url: ${APP_BASE_URL:http://localhost:4200}   # sert à construire les liens des e-mails
+  mail.from: ${MAIL_FROM:Memento <contact@memento.fr>}
+
+management:
+  endpoints.web.exposure.include: health
+  endpoint.health.show-details: never

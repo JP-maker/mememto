@@ -1,0 +1,96 @@
+// Styles communs aux pages de compte (connexion, inscription, vérification, mot de passe).
+:host {
+  display: block;
+}
+
+.auth {
+  display: grid;
+  gap: 18px;
+  max-width: 440px;
+  margin: 0 auto;
+  padding-block: 24px;
+}
+
+h1 {
+  font-size: clamp(2rem, 4vw, 2.6rem);
+}
+
+form {
+  display: grid;
+  gap: 14px;
+}
+
+.f {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+input[type='email'],
+input[type='password'] {
+  width: 100%;
+  padding: 12px 14px;
+  font: 400 1rem var(--font-body);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.hint,
+.links {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+
+  a {
+    color: var(--ink);
+  }
+}
+
+// Message d'erreur : le symbole ⚠ et le texte portent le sens, pas seulement la couleur.
+.err {
+  margin: 0;
+  color: var(--error);
+  font-weight: 600;
+}
+
+.ok {
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-left: 6px solid var(--accent);
+  border-radius: 8px;
+}
+
+.oauth {
+  display: grid;
+  gap: 10px;
+
+  .btn {
+    justify-content: center;
+    color: var(--ink);
+    background: var(--surface);
+    border-color: var(--line);
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.sep {
+  margin: 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.85rem;
+}

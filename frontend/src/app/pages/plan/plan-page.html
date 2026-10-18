@@ -1,0 +1,30 @@
+@if (lesson(); as l) {
+  <div class="phead">
+    <div>
+      <span class="label">{{ meta() }}</span>
+      <h1>{{ l.title }}</h1>
+    </div>
+    <a class="btn ghost" routerLink="/lecon">Nouvelle leçon</a>
+  </div>
+  <p class="note">Mode invité : ce plan reste sur cet appareil.</p>
+
+  @if (sessionToday()) {
+    <p><a class="btn" routerLink="/seance">Commencer la séance du jour →</a></p>
+  }
+
+  <ol class="days">
+    @for (r of rows(); track r.date) {
+      <li class="day" [class.today]="r.today" [class.rest]="r.type === 'REST'" [class.final]="r.type === 'FINAL'">
+        <span class="d">{{ r.label }}</span>
+        <span>{{ r.task }}</span>
+        <span class="pill">{{ r.done ? '✔ fait' : r.pill }}</span>
+      </li>
+    }
+  </ol>
+} @else {
+  <section class="empty">
+    <h1>Pas encore de <span class="mark">plan</span></h1>
+    <p>Ajoute une leçon et une date butoir pour obtenir ton plan jour par jour.</p>
+    <a class="btn" routerLink="/lecon">Ajouter ma leçon →</a>
+  </section>
+}

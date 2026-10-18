@@ -1,0 +1,58 @@
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 18px 16px;
+}
+
+.brand {
+  margin-right: auto;
+  font: 700 1.4rem var(--font-display);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+nav {
+  display: flex;
+  gap: 8px;
+
+  a {
+    padding: 8px 14px;
+    border: 1px solid transparent;
+    border-radius: 99px;
+    color: var(--muted);
+    font-weight: 500;
+    text-decoration: none;
+
+    // Page courante : fond et bordure en plus de la couleur du texte.
+    &.current {
+      color: var(--ink);
+      background: var(--surface);
+      border-color: var(--line);
+    }
+  }
+
+  .who {
+    align-self: center;
+    max-width: 200px;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .out {
+    padding: 8px 14px;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    font: 500 1rem var(--font-body);
+    cursor: pointer;
+  }
+}

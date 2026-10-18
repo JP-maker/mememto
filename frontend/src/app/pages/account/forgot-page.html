@@ -1,0 +1,26 @@
+<section class="auth">
+  <h1>Mot de passe <span class="mark">oublié</span></h1>
+
+  @if (sent()) {
+    <p class="ok" role="status">
+      ✔ Si un compte existe pour cette adresse, un lien de réinitialisation vient d'être envoyé. Il est valable 1 heure.
+    </p>
+    <p class="links"><a routerLink="/connexion">Retour à la connexion</a></p>
+  } @else {
+    <p class="hint">Saisis l'adresse de ton compte. Nous t'envoyons un lien pour choisir un nouveau mot de passe.</p>
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label class="f" for="email">
+        Adresse e-mail
+        <input type="email" id="email" formControlName="email" autocomplete="email" maxlength="254" />
+      </label>
+      @if (submitted() && form.controls.email.invalid) {
+        <p class="err" role="alert">⚠ Saisis une adresse e-mail valide.</p>
+      }
+      @if (error()) {
+        <p class="err" role="alert">⚠ {{ error() }}</p>
+      }
+      <button type="submit" class="btn" [disabled]="busy()">Envoyer le lien</button>
+    </form>
+    <p class="links"><a routerLink="/connexion">Retour à la connexion</a></p>
+  }
+</section>

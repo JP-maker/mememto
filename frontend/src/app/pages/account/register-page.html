@@ -1,0 +1,41 @@
+<section class="auth">
+  <h1>Créer un <span class="mark">compte</span></h1>
+
+  @if (sent()) {
+    <p class="ok" role="status">
+      ✔ Vérifie ta boîte mail : si cette adresse peut être utilisée, un lien de confirmation vient de lui être envoyé.
+      Tu pourras te connecter après l'avoir ouvert.
+    </p>
+    <p class="links"><a routerLink="/connexion">Aller à la connexion</a></p>
+  } @else {
+    <div class="oauth">
+      <!-- Liens ordinaires (pas routerLink) : le navigateur quitte le site pour Google / Microsoft puis revient. -->
+      <a class="btn" href="/oauth2/authorization/google">Continuer avec Google</a>
+      <a class="btn" href="/oauth2/authorization/microsoft">Continuer avec Microsoft</a>
+    </div>
+    <p class="sep">ou avec ton adresse e-mail</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label class="f" for="email">
+        Adresse e-mail
+        <input type="email" id="email" formControlName="email" autocomplete="email" maxlength="254" />
+      </label>
+      @if (submitted() && form.controls.email.invalid) {
+        <p class="err" role="alert">⚠ Saisis une adresse e-mail valide.</p>
+      }
+      <label class="f" for="password">
+        Mot de passe
+        <input type="password" id="password" formControlName="password" autocomplete="new-password" maxlength="128" />
+      </label>
+      <p class="hint">10 caractères minimum. Une phrase longue est plus sûre qu'un mot compliqué.</p>
+      @if (submitted() && form.controls.password.invalid) {
+        <p class="err" role="alert">⚠ Choisis un mot de passe d'au moins 10 caractères.</p>
+      }
+      @if (error()) {
+        <p class="err" role="alert">⚠ {{ error() }}</p>
+      }
+      <button type="submit" class="btn" [disabled]="busy()">Créer mon compte</button>
+    </form>
+    <p class="links"><a routerLink="/connexion">J'ai déjà un compte</a></p>
+  }
+</section>

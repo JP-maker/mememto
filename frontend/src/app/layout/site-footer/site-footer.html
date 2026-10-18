@@ -1,0 +1,8 @@
+<footer class="site-footer">
+  <div class="footer-links">
+    <a class="btn" [href]="mailHref" [attr.aria-label]="'Envoyer un e-mail à ' + info.author">Me contacter</a>
+    <a class="btn ghost" routerLink="/don">Faire un don</a>
+  </div>
+  <p>© {{ year }} {{ info.author }}</p>
+  <p class="version" title="Version de l'application">Memento {{ versionLabel }}</p>
+</footer>

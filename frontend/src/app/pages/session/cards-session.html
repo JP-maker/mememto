@@ -1,0 +1,62 @@
+<section class="sess">
+  @if (queue().length === 0) {
+    <h2>Aucune carte à revoir pour le moment</h2>
+    <p class="muted">Les cartes reviennent selon tes réponses. Reviens plus tard ou demain.</p>
+    <div class="row"><button type="button" class="btn" (click)="finished.emit()">Terminer la séance</button></div>
+  } @else if (!current()) {
+    <h2>Cartes terminées</h2>
+    <p class="muted">Tu as revu {{ queue().length }} carte{{ queue().length > 1 ? 's' : '' }}.</p>
+    <div class="row"><button type="button" class="btn" (click)="finished.emit()">Terminer la séance</button></div>
+  } @else {
+    <div class="cardx">
+      <div class="seg" role="group" aria-label="Type de réponse">
+        <button type="button" [attr.aria-pressed]="mode() === 'qcm'" (click)="setMode('qcm')">Choix multiples</button>
+        <button type="button" [attr.aria-pressed]="mode() === 'free'" (click)="setMode('free')">Réponse libre</button>
+      </div>
+      <span class="label">Carte {{ position() + 1 }} sur {{ queue().length }}</span>
+      <p class="big">{{ current().cloze }}</p>
+
+      @if (qcm()) {
+        <div class="qcm">
+          @for (choice of choices(); track choice) {
+            <button
+              type="button"
+              class="q"
+              [class.ok]="picked() !== null && choice === current().answer"
+              [class.ko]="picked() === choice && choice !== current().answer"
+              [disabled]="picked() !== null"
+              (click)="pick(choice)"
+            >
+              {{ choice }}
+            </button>
+          }
+        </div>
+        @if (picked() !== null) {
+          <p role="status">
+            @if (isCorrect()) {
+              Bonne réponse. Cette carte revient dans 3 jours.
+            } @else {
+              Pas tout à fait : la réponse est {{ current().answer }}. Cette carte revient dans 10 minutes.
+            }
+          </p>
+          <button type="button" class="btn" (click)="next()">Carte suivante →</button>
+        }
+      } @else {
+        @if (!revealed()) {
+          @if (mode() === 'qcm') {
+            <p class="muted">Pas assez de mots dans la leçon pour proposer des choix : réponds de mémoire.</p>
+          }
+          <button type="button" class="btn" (click)="reveal()">Afficher la réponse</button>
+        } @else {
+          <p class="big"><span class="mark">{{ current().answer }}</span></p>
+          <p class="muted">As-tu su répondre ?</p>
+          <div class="grade">
+            @for (g of grades; track g.grade) {
+              <button type="button" class="btn" (click)="grade(g.grade)">{{ g.label }}<small>{{ g.delay }}</small></button>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+</section>

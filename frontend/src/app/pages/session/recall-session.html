@@ -1,0 +1,30 @@
+<section class="sess">
+  @switch (phase()) {
+    @case ('read') {
+      <span class="label">Étape 1 sur 3 · Lire</span>
+      <h2>Relis ta leçon</h2>
+      <p class="muted">Prends ton temps. À l'étape suivante, le texte sera masqué.</p>
+      <p class="lesson-text">{{ text() }}</p>
+      <div class="row"><button type="button" class="btn" (click)="go('write')">Masquer et écrire de mémoire</button></div>
+    }
+    @case ('write') {
+      <span class="label">Étape 2 sur 3 · Écrire de mémoire</span>
+      <h2>Qu'est-ce que tu retiens de la leçon ?</h2>
+      <p class="muted">Le texte est masqué. Écris tout ce qui te revient, même en désordre.</p>
+      <textarea aria-label="Ce que je retiens" (input)="write($event)"></textarea>
+      <div class="row"><button type="button" class="btn" (click)="go('result')">Comparer avec la leçon</button></div>
+    }
+    @case ('result') {
+      <span class="label">Étape 3 sur 3 · Comparer</span>
+      <h2>Résultat : {{ score() }} idée{{ score() > 1 ? 's' : '' }} sur {{ results().length }}</h2>
+      <ul class="chk">
+        @for (r of results(); track r.item.id) {
+          <li [class.ko]="!r.found">
+            <b>{{ r.found ? '✔ RETROUVÉ' : '✖ OUBLIÉ' }}</b>{{ r.item.sentence }}
+          </li>
+        }
+      </ul>
+      <div class="row"><button type="button" class="btn" (click)="finished.emit()">Terminer la séance</button></div>
+    }
+  }
+</section>
