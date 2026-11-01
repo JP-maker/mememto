@@ -5,6 +5,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { Observable, map, of, switchMap } from 'rxjs';
 import { AiApi, AiProvider } from '../../lesson/ai.api';
+import { buildPrompt, parseReply } from '../../lesson/ai-prompt';
 import { addDays, daysUntil, toIsoDate } from '../../lesson/dates';
 import { deadlineValidator } from '../../lesson/deadline.validator';
 import { LessonStore } from '../../lesson/lesson.store';
@@ -51,14 +52,16 @@ export class LessonPage {
     deadline: [toIsoDate(addDays(new Date(), 14)), [Validators.required, deadlineValidator]],
     minutesPerDay: [20],
     // Ces trois champs ne font pas partie de la leçon : ils ne sont jamais enregistrés (voir submit).
-    prep: ['auto' as 'auto' | 'ai'],
+    prep: ['auto' as 'auto' | 'ai' | 'manual'],
     provider: ['ANTHROPIC' as AiProvider],
     apiKey: [''],
+    reply: [''], // réponse collée de l'assistant (préparation sans clé) ; jamais enregistrée non plus
   });
 
   protected readonly submitted = signal(false);
   protected readonly busy = signal(false);
   protected readonly error = signal('');
+  protected readonly copied = signal<'' | 'ok' | 'fail'>('');
 
   private readonly value = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
   protected readonly words = computed(() => (this.value().text?.match(/\S+/g) ?? []).length);
@@ -67,23 +70,45 @@ export class LessonPage {
     return deadline ? daysUntil(deadline) : 0;
   });
 
+  /** Prompt prêt à coller dans l'assistant de l'utilisateur. */
+  protected readonly prompt = computed(() => buildPrompt(this.value().text ?? ''));
+
+  protected async copyPrompt(): Promise<void> {
+    if (this.form.controls.text.invalid) {
+      this.submitted.set(true); // affiche l'erreur du texte : le prompt n'a de sens qu'avec la leçon
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(this.prompt());
+      this.copied.set('ok');
+    } catch {
+      this.copied.set('fail'); // presse-papiers refusé : le prompt s'affiche pour être copié à la main
+    }
+  }
+
   protected submit(): void {
     this.submitted.set(true);
     this.error.set('');
-    const { prep, provider, apiKey, ...lesson } = this.form.getRawValue();
+    const { prep, provider, apiKey, reply, ...lesson } = this.form.getRawValue();
     const key = apiKey.trim();
     if (this.form.invalid || (prep === 'ai' && !key)) {
       return;
     }
+    const pasted = prep === 'manual' ? parseReply(reply) : undefined;
+    if (pasted?.length === 0) {
+      this.error.set("La réponse collée n'est pas utilisable. Colle la réponse complète de ton IA, telle quelle (le JSON demandé par le prompt).");
+      return;
+    }
     this.busy.set(true);
     const prepared: Observable<PreparedItem[] | undefined> =
-      prep === 'ai' ? this.ai.prepare(provider, key, lesson.text) : of(undefined);
+      prep === 'ai' ? this.ai.prepare(provider, key, lesson.text) : of(pasted);
     this.api
       .compute(lesson.deadline, lesson.minutesPerDay)
       .pipe(switchMap((plan) => prepared.pipe(map((items) => ({ plan, items })))))
       .subscribe({
         next: ({ plan, items }) => {
           this.form.controls.apiKey.reset(); // la clé ne reste pas dans le formulaire
+          this.form.controls.reply.reset();
           this.store.save({ ...lesson, plan, ...(items ? { items } : {}) });
           void this.router.navigateByUrl('/plan');
         },

@@ -126,4 +126,65 @@ describe('LessonPage', () => {
       expect(TestBed.inject(LessonStore).lesson()).toBeNull();
     });
   });
+
+  describe('avec mon IA (copier-coller)', () => {
+    const REPLY =
+      '```json\n{"items":[{"sentence":"La prise de la Bastille a lieu le 14 juillet 1789.","answer":"Bastille","distractors":["a","b","c"],"keywords":["Bastille"]}]}\n```';
+
+    async function fillManual(reply: string): Promise<void> {
+      type('#titre', 'Histoire');
+      type('#texte', TEXT);
+      page.querySelector<HTMLInputElement>('#prep-manuel')!.click();
+      await fixture.whenStable();
+      type('#reponse', reply);
+    }
+
+    it('copie un prompt qui contient la leçon', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+      type('#texte', TEXT);
+      page.querySelector<HTMLInputElement>('#prep-manuel')!.click();
+      await fixture.whenStable();
+
+      Array.from(page.querySelectorAll('button')).find((b) => b.textContent!.includes('Copier le prompt'))!.click();
+      await fixture.whenStable();
+
+      expect(writeText).toHaveBeenCalledWith(expect.stringContaining(TEXT));
+      expect(page.textContent).toContain('Copié');
+    });
+
+    it('affiche le prompt à copier à la main quand le presse-papiers est refusé', async () => {
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn().mockRejectedValue(new Error('no')) }, configurable: true });
+      type('#texte', TEXT);
+      page.querySelector<HTMLInputElement>('#prep-manuel')!.click();
+      await fixture.whenStable();
+
+      Array.from(page.querySelectorAll('button')).find((b) => b.textContent!.includes('Copier le prompt'))!.click();
+      await fixture.whenStable();
+
+      expect(page.querySelector<HTMLTextAreaElement>('#prompt')!.value).toContain(TEXT);
+    });
+
+    it('importe la réponse collée sans appeler l’API d’IA et ne la garde pas dans la leçon', async () => {
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      await fillManual(REPLY);
+      await submit();
+      http.expectOne('/api/plan').flush([{ date: '2026-10-17', type: 'LEARN', minutes: 20 }]);
+      http.expectNone('/api/prepare');
+
+      const saved = TestBed.inject(LessonStore).lesson()!;
+      expect(saved.items?.[0].answer).toBe('Bastille');
+      expect(JSON.stringify(saved)).not.toContain('```');
+      expect(navigate).toHaveBeenCalledWith('/plan');
+    });
+
+    it('refuse une réponse inutilisable sans rien enregistrer', async () => {
+      await fillManual('désolé, je ne peux pas');
+      await submit();
+
+      expect(page.textContent).toContain("La réponse collée n'est pas utilisable");
+      http.expectNone('/api/plan');
+      expect(TestBed.inject(LessonStore).lesson()).toBeNull();
+    });
+  });
 });

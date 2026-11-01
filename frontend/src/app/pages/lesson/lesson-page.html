@@ -34,7 +34,7 @@
 
     <fieldset>
       <legend>3. La préparation du texte</legend>
-      <div class="opts two" role="radiogroup" aria-label="Préparation du texte">
+      <div class="opts" role="radiogroup" aria-label="Préparation du texte">
         <div class="opt">
           <input type="radio" id="prep-auto" name="prep" formControlName="prep" value="auto" />
           <label for="prep-auto">
@@ -45,11 +45,44 @@
         <div class="opt">
           <input type="radio" id="prep-ia" name="prep" formControlName="prep" value="ai" />
           <label for="prep-ia">
-            <b>Avec mon IA</b>
+            <b>Avec mon IA (clé d'API)</b>
             <span>Tu fournis ta propre clé. Questions, trous et faux choix plus pertinents.</span>
           </label>
         </div>
+        <div class="opt">
+          <input type="radio" id="prep-manuel" name="prep" formControlName="prep" value="manual" />
+          <label for="prep-manuel">
+            <b>Avec mon IA (copier-coller)</b>
+            <span>Sans clé : tu copies un prompt dans ChatGPT, Claude… puis tu colles sa réponse ici.</span>
+          </label>
+        </div>
       </div>
+      @if (form.controls.prep.value === 'manual') {
+        <ol class="steps">
+          <li>
+            <button type="button" class="btn ghost" (click)="copyPrompt()">Copier le prompt</button>
+            @if (copied() === 'ok') {
+              <span role="status">✔ Copié</span>
+            }
+          </li>
+          <li>Colle-le dans ton assistant (ChatGPT, Claude, Gemini…) et attends sa réponse.</li>
+          <li>Copie la réponse complète et colle-la ci-dessous.</li>
+        </ol>
+        @if (copied() === 'fail') {
+          <label class="f" for="prompt">
+            Copie ce prompt à la main
+            <textarea id="prompt" readonly [value]="prompt()" (focus)="$any($event.target).select()"></textarea>
+          </label>
+        }
+        <label class="f" for="reponse">
+          Réponse de ton IA
+          <textarea id="reponse" formControlName="reply" maxlength="100000" spellcheck="false" placeholder='{"items":[ … ]}'></textarea>
+        </label>
+        @if (submitted() && !form.controls.reply.value.trim()) {
+          <p class="err" role="alert">⚠ Colle la réponse de ton IA.</p>
+        }
+        <p class="note">Ton texte n'est envoyé qu'à l'assistant que tu choisis, par toi-même. Mememto ne le transmet à aucun fournisseur.</p>
+      }
       @if (form.controls.prep.value === 'ai') {
         <label class="f" for="provider">
           Fournisseur
