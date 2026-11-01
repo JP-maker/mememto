@@ -58,6 +58,10 @@ server:
         secure: ${COOKIE_SECURE:false}   # true dès qu'on passe en HTTPS
 
 mememto:
+  # Modèles utilisés avec la clé de l'utilisateur. À vérifier de temps en temps : les fournisseurs retirent d'anciens modèles.
+  ai:
+    anthropic-model: ${AI_ANTHROPIC_MODEL:claude-haiku-5-5}
+    openai-model: ${AI_OPENAI_MODEL:gpt-4.1-mini}
   base-url: ${APP_BASE_URL:http://localhost:4200}   # sert à construire les liens des e-mails
   mail.from: ${MAIL_FROM:Mememto <contact@mememto.fr>}
 

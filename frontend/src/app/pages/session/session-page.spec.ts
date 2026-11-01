@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { addDays, toIsoDate } from '../../lesson/dates';
 import { Lesson } from '../../lesson/lesson.model';
 import { LessonStore } from '../../lesson/lesson.store';
@@ -49,6 +49,38 @@ describe('SessionPage', () => {
     const { el } = await render();
     expect(el.textContent).toContain('Pas de séance');
     expect(el.textContent).toContain('Prochaine séance');
+  });
+
+  it('utilise le texte préparé par l’IA quand la leçon en contient', async () => {
+    TestBed.inject(LessonStore).save({
+      ...lesson('ACTIVE_RECALL', 'LEARN', 'Trop court pour le découpage automatique'),
+      items: [{ sentence: 'La chlorophylle est verte.', answer: 'chlorophylle', keywords: ['chlorophylle'], distractors: [] }],
+    });
+    const { el } = await render();
+    expect(el.textContent).not.toContain('trop court');
+    expect(el.textContent).toContain('Relis ta leçon');
+  });
+
+  it('permet de s’entraîner un jour de repos sans enregistrer de progression', async () => {
+    const store = TestBed.inject(LessonStore);
+    store.save(lesson('SPACED_REPETITION', 'REST'));
+    const { el, fixture } = await render();
+    expect(el.textContent).toContain('Pas de séance');
+
+    Array.from(el.querySelectorAll('button')).find((b) => b.textContent!.includes('S\'entraîner'))!.click();
+    await fixture.whenStable();
+
+    expect(el.textContent).toContain('Entraînement libre');
+    expect(el.querySelector('app-cards-session')).not.toBeNull();
+    expect(store.lesson()!.done ?? []).toHaveLength(0);
+  });
+
+  it('démarre directement en entraînement libre avec ?mode=libre', async () => {
+    TestBed.inject(LessonStore).save(lesson('ACTIVE_RECALL', 'REST'));
+    const route = TestBed.inject(ActivatedRoute);
+    vi.spyOn(route.snapshot.queryParamMap, 'get').mockReturnValue('libre');
+    const { el } = await render();
+    expect(el.textContent).toContain('Entraînement libre');
   });
 
   it('refuse un texte trop court pour préparer une séance', async () => {

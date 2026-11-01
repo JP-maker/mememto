@@ -36,20 +36,40 @@
       <legend>3. La préparation du texte</legend>
       <div class="opts two" role="radiogroup" aria-label="Préparation du texte">
         <div class="opt">
-          <input type="radio" id="prep-auto" name="prep" checked />
+          <input type="radio" id="prep-auto" name="prep" formControlName="prep" value="auto" />
           <label for="prep-auto">
             <b>Découpage automatique</b>
             <span>Gratuit. Le texte est coupé par phrases, les mots clés deviennent des trous.</span>
           </label>
         </div>
         <div class="opt">
-          <input type="radio" id="prep-ia" name="prep" disabled />
+          <input type="radio" id="prep-ia" name="prep" formControlName="prep" value="ai" />
           <label for="prep-ia">
-            <b>Avec mon IA <em>(bientôt)</em></b>
+            <b>Avec mon IA</b>
             <span>Tu fournis ta propre clé. Questions, trous et faux choix plus pertinents.</span>
           </label>
         </div>
       </div>
+      @if (form.controls.prep.value === 'ai') {
+        <label class="f" for="provider">
+          Fournisseur
+          <select id="provider" formControlName="provider">
+            <option value="ANTHROPIC">Anthropic (Claude)</option>
+            <option value="OPENAI">OpenAI</option>
+          </select>
+        </label>
+        <label class="f" for="cle">
+          Ta clé d'API
+          <input type="password" id="cle" formControlName="apiKey" autocomplete="off" spellcheck="false" maxlength="300" />
+        </label>
+        <p class="note">
+          La clé est envoyée une seule fois, transmise au fournisseur pour préparer ton texte, puis oubliée :
+          elle n'est ni enregistrée ni journalisée. Ton texte est envoyé à ce fournisseur.
+        </p>
+        @if (submitted() && !form.controls.apiKey.value.trim()) {
+          <p class="err" role="alert">⚠ Colle ta clé d'API pour utiliser ton IA.</p>
+        }
+      }
     </fieldset>
 
     <fieldset>
@@ -78,9 +98,9 @@
     <span class="label">Récapitulatif</span>
     <div class="kv"><span>Longueur</span><b>{{ words() }} mots</b></div>
     <div class="kv"><span>Jours restants</span><b>{{ daysLeft() > 0 ? daysLeft() : '—' }}</b></div>
-    @if (failed()) {
-      <p class="err" role="alert">⚠ Le plan n'a pas pu être calculé. Réessaie dans un instant.</p>
+    @if (error()) {
+      <p class="err" role="alert">⚠ {{ error() }}</p>
     }
-    <button type="submit" class="btn" [disabled]="busy()">Générer mon plan →</button>
+    <button type="submit" class="btn" [disabled]="busy()">{{ busy() ? 'Préparation…' : 'Générer mon plan →' }}</button>
   </aside>
 </form>

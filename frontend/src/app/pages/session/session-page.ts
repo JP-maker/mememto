@@ -1,9 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { formatDay, toIsoDate } from '../../lesson/dates';
 import { LessonStore } from '../../lesson/lesson.store';
 import { Grade, nextDue } from '../../lesson/schedule';
-import { prepare } from '../../lesson/text-prep';
+import { prepare, toItems } from '../../lesson/text-prep';
 import { CardsSession } from './cards-session';
 import { FeynmanSession } from './feynman-session';
 import { RecallSession } from './recall-session';
@@ -20,15 +20,24 @@ export class SessionPage {
   protected readonly lesson = this.store.lesson;
   private readonly today = toIsoDate(new Date());
   private readonly done = signal(false);
+  /** Entraînement libre : sans tenir compte du plan ni des dates de retour, sans rien enregistrer. */
+  protected readonly practice = signal(inject(ActivatedRoute).snapshot.queryParamMap.get('mode') === 'libre');
 
   // Dépend du texte seul : les éléments gardent la même identité quand la progression change.
   private readonly text = computed(() => this.lesson()?.text ?? '');
-  protected readonly items = computed(() => prepare(this.text()));
+  private readonly prepared = computed(() => this.lesson()?.items);
+  protected readonly items = computed(() => {
+    const prepared = this.prepared();
+    return prepared?.length ? toItems(prepared) : prepare(this.text());
+  });
   private readonly day = computed(() => this.lesson()?.plan.find((d) => d.date === this.today));
 
   protected readonly status = computed(() => {
     if (!this.lesson()) {
       return 'empty';
+    }
+    if (this.practice()) {
+      return this.items().length === 0 ? 'short' : 'ready';
     }
     if (this.done()) {
       return 'finished';
@@ -46,11 +55,21 @@ export class SessionPage {
   });
 
   protected grade(event: { id: number; grade: Grade }): void {
+    if (this.practice()) {
+      return; // l'entraînement ne change pas les dates de retour
+    }
     this.store.setDue(event.id, nextDue(event.grade));
   }
 
   protected finish(): void {
-    this.store.markDone(this.today);
+    if (!this.practice()) {
+      this.store.markDone(this.today);
+    }
+    this.practice.set(false);
     this.done.set(true);
+  }
+
+  protected startPractice(): void {
+    this.practice.set(true);
   }
 }

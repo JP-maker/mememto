@@ -50,3 +50,31 @@ jobs:
             APP_VERSION=${{ steps.meta.outputs.version }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  # Déploiement sur le serveur par SSH. Désactivé tant que la variable de dépôt DEPLOY_ENABLED n'est pas « true »
+  # (voir README : secrets DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS).
+  deploy:
+    needs: images
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clé SSH et empreinte du serveur
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+      - name: Envoi de la configuration et redémarrage
+        env:
+          TARGET: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          SSH="ssh -i $HOME/.ssh/id_deploy -o StrictHostKeyChecking=yes"
+          scp -i ~/.ssh/id_deploy -o StrictHostKeyChecking=yes docker-compose.prod.yml "$TARGET:mememto/"
+          scp -i ~/.ssh/id_deploy -o StrictHostKeyChecking=yes deploy/Caddyfile "$TARGET:mememto/deploy/"
+          $SSH "$TARGET" "cd mememto && sed -i '/^MEMEMTO_VERSION=/d' .env && echo MEMEMTO_VERSION=${VERSION#v} >> .env \
+            && docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d"

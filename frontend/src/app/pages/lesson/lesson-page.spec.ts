@@ -74,4 +74,56 @@ describe('LessonPage', () => {
 
     expect(page.textContent).toContain("Le plan n'a pas pu être calculé");
   });
+
+  describe('avec mon IA', () => {
+    const ITEMS = [{ sentence: 'La Bastille tombe en 1789.', answer: 'Bastille', keywords: ['Bastille'], distractors: ['a', 'b', 'c'] }];
+    const KEY = 'sk-ant-secret-1234567890';
+
+    async function fill(key: string): Promise<void> {
+      type('#titre', 'Histoire');
+      type('#texte', TEXT);
+      const radio = page.querySelector<HTMLInputElement>('#prep-ia')!;
+      radio.click();
+      await fixture.whenStable();
+      if (key) {
+        type('#cle', key);
+      }
+    }
+
+    it('exige une clé et n’appelle rien sans elle', async () => {
+      await fill('');
+      await submit();
+      expect(page.textContent).toContain('Colle ta clé');
+      http.expectNone('/api/plan');
+      http.expectNone('/api/prepare');
+    });
+
+    it('envoie la clé une fois, enregistre les éléments mais jamais la clé', async () => {
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      await fill(KEY);
+      await submit();
+      http.expectOne('/api/plan').flush([{ date: '2026-10-17', type: 'LEARN', minutes: 20 }]);
+      const prepare = http.expectOne('/api/prepare');
+      expect(prepare.request.body).toEqual({ provider: 'ANTHROPIC', apiKey: KEY, text: TEXT });
+      prepare.flush(ITEMS);
+
+      const saved = TestBed.inject(LessonStore).lesson()!;
+      expect(saved.items).toEqual(ITEMS);
+      expect(JSON.stringify(saved)).not.toContain(KEY);
+      expect(JSON.stringify(Object.entries(localStorage))).not.toContain(KEY);
+      expect(navigate).toHaveBeenCalledWith('/plan');
+    });
+
+    it('explique un refus de clé sans enregistrer la leçon', async () => {
+      await fill(KEY);
+      await submit();
+      http.expectOne('/api/plan').flush([]);
+      http.expectOne('/api/prepare').flush({}, { status: 422, statusText: 'Unprocessable' });
+      await fixture.whenStable();
+
+      expect(page.textContent).toContain('Ta clé a été refusée');
+      expect(page.textContent).not.toContain(KEY);
+      expect(TestBed.inject(LessonStore).lesson()).toBeNull();
+    });
+  });
 });

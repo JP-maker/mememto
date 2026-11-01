@@ -1,0 +1,69 @@
+# Production : images publiées sur GHCR par la release, HTTPS automatique avec Caddy.
+# Sur le serveur : copier ce fichier, deploy/Caddyfile et un .env (modèle : deploy/.env.prod.example),
+# puis : docker compose -f docker-compose.prod.yml up -d
+# Seul Caddy publie des ports (80 et 443) ; la base et l'API restent sur le réseau interne.
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      retries: 10
+
+  backend:
+    image: ${IMAGE_PREFIX}-backend:${MEMEMTO_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_BASE_URL: https://${DOMAIN}
+      COOKIE_SECURE: "true"
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_AUTH: "true"
+      MAIL_STARTTLS: "true"
+      MAIL_FROM: ${MAIL_FROM}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-not-configured}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-not-configured}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-not-configured}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-not-configured}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: ${IMAGE_PREFIX}-frontend:${MEMEMTO_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data   # certificats : à conserver entre deux démarrages
+      - caddy-config:/config
+    depends_on:
+      - frontend
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:

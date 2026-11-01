@@ -1,5 +1,6 @@
 package com.mememto.lesson;
 
+import com.mememto.ai.PreparedItem;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -22,7 +23,9 @@ public record LessonData(
         @Min(5) @Max(240) int minutesPerDay,
         @NotNull @Size(max = 400) List<@Valid PlanDay> plan,
         @Size(max = 400) List<@Pattern(regexp = DATE) String> done,
-        @Size(max = 2_000) Map<@Pattern(regexp = "\\d{1,5}") String, @Size(max = 40) String> progress) {
+        @Size(max = 2_000) Map<@Pattern(regexp = "\\d{1,5}") String, @Size(max = 40) String> progress,
+        /** Texte préparé par l'IA ; absent quand la préparation est automatique. */
+        @Size(max = 200) List<@Valid PreparedItem> items) {
 
     static final String DATE = "\\d{4}-\\d{2}-\\d{2}";
 

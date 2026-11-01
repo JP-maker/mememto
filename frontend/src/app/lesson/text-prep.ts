@@ -3,6 +3,7 @@
  * trous (cartes), faux choix (QCM) et comparaison avec ce que l'utilisateur a écrit.
  * Ce sont des fonctions pures : même texte, mêmes éléments.
  */
+import type { PreparedItem } from './lesson.model';
 
 /** Une phrase de la leçon avec ses mots clés. L'identifiant est sa position dans la leçon. */
 export interface Item {
@@ -14,6 +15,8 @@ export interface Item {
   readonly answer: string;
   /** La phrase avec le mot clé remplacé par des tirets. */
   readonly cloze: string;
+  /** Trois faux choix fournis par l'IA ; absents avec le découpage automatique. */
+  readonly distractors?: readonly string[];
 }
 
 // shortcut: liste de mots courants en français uniquement, à compléter pour d'autres langues ou via l'IA.
@@ -65,7 +68,8 @@ function keywordsOf(sentence: string): string[] {
     .map((s) => s.word);
 }
 
-function blank(sentence: string, answer: string): string {
+/** Remplace la première occurrence du mot par des tirets. */
+export function blank(sentence: string, answer: string): string {
   const escaped = answer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return sentence.replace(new RegExp(`(?<!${WORD_CHAR})${escaped}(?!${WORD_CHAR})`, 'u'), '_____');
 }
@@ -84,6 +88,18 @@ export function prepare(text: string): Item[] {
     }));
 }
 
+/** Éléments issus de la préparation par l'IA. L'identifiant est la position, comme pour le découpage automatique. */
+export function toItems(prepared: readonly PreparedItem[]): Item[] {
+  return prepared.map((p, id) => ({
+    id,
+    sentence: p.sentence,
+    keywords: p.keywords.length > 0 ? p.keywords : [p.answer],
+    answer: p.answer,
+    cloze: blank(p.sentence, p.answer),
+    distractors: p.distractors.length === 3 ? p.distractors : undefined,
+  }));
+}
+
 function shuffle<T>(list: readonly T[], rng: () => number): T[] {
   const copy = [...list];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -94,10 +110,14 @@ function shuffle<T>(list: readonly T[], rng: () => number): T[] {
 }
 
 /**
- * Quatre choix mélangés (la bonne réponse et trois mots clés d'autres phrases, de même nature :
- * nombre avec nombre). Renvoie null s'il n'y a pas assez de mots différents : la carte passe en réponse libre.
+ * Quatre choix mélangés : la bonne réponse et trois faux choix de l'IA s'il y en a, sinon trois mots clés
+ * d'autres phrases, de même nature (nombre avec nombre). Renvoie null s'il n'y a pas assez de mots
+ * différents : la carte passe en réponse libre.
  */
 export function choicesFor(item: Item, items: readonly Item[], rng: () => number = Math.random): string[] | null {
+  if (item.distractors) {
+    return shuffle([item.answer, ...item.distractors], rng); // faux choix choisis par l'IA pour cette phrase
+  }
   const target = normalize(item.answer);
   const pool = new Map<string, string>();
   for (const other of items) {

@@ -59,6 +59,20 @@ git tag v0.1.0 && git push origin v0.1.0
 
 À la première publication, les images GHCR sont privées : les rendre publiques (ou se connecter avec un jeton) depuis la page « Packages » du compte GitHub.
 
+## Option « Avec mon IA »
+
+À l'étape 3 du formulaire, l'utilisateur choisit son fournisseur et colle sa clé : l'IA renvoie pour chaque phrase le mot à cacher, des mots clés et trois faux choix. Le résultat est gardé avec la leçon, la séance l'utilise à la place du découpage automatique. Modèles réglables : `AI_ANTHROPIC_MODEL` (défaut `claude-haiku-5-5`) et `AI_OPENAI_MODEL` (défaut `gpt-4.1-mini`) ; à vérifier auprès des fournisseurs.
+
+## Mise en production (serveur Docker)
+
+Le serveur a besoin de Docker, des ports 80 et 443 ouverts, et d'un nom de domaine dont l'enregistrement DNS pointe vers lui.
+
+1. Sur le serveur, créer le dossier `mememto/` avec un `.env` copié de `deploy/.env.prod.example` (`chmod 600`) et un dossier `mememto/deploy/`.
+2. Images privées : `docker login ghcr.io` une fois avec un jeton GitHub ayant le droit `read:packages` (ou rendre les paquets publics).
+3. Premier lancement à la main : copier `docker-compose.prod.yml` et `deploy/Caddyfile`, puis `docker compose -f docker-compose.prod.yml up -d`. Caddy obtient le certificat HTTPS tout seul.
+4. Déploiement automatique à chaque tag `vX.Y.Z` : dans GitHub, créer l'environnement `production`, y mettre les secrets `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` (clé privée dédiée, ajoutée aux `authorized_keys` du serveur) et `DEPLOY_KNOWN_HOSTS` (résultat de `ssh-keyscan -t ed25519 <hôte>`), puis la variable de dépôt `DEPLOY_ENABLED=true`.
+5. Penser à déclarer `https://<domaine>/login/oauth2/code/google` et `/microsoft` chez Google et Microsoft.
+
 ## Choix de sécurité (OWASP)
 
 - Accès refusé par défaut, routes publiques listées une à une (`SecurityConfig`).
@@ -70,10 +84,9 @@ git tag v0.1.0 && git push origin v0.1.0
 - Les réponses d'inscription et de « mot de passe oublié » ne révèlent pas si une adresse existe. Cinq échecs de connexion bloquent l'adresse 15 minutes.
 - Nouvel identifiant de session à chaque connexion.
 - Conteneurs exécutés sans droits root.
-- La clé API IA d'un utilisateur ne sera ni stockée ni écrite dans les journaux.
+- Option « Avec mon IA » : la clé de l'utilisateur voyage dans une seule requête `POST /api/prepare`, est transmise au fournisseur (Anthropic ou OpenAI, adresses fixes côté serveur) puis oubliée. Elle n'est ni stockée, ni journalisée (`toString` masqué), ni enregistrée avec la leçon ; les erreurs du fournisseur ne sont jamais renvoyées au navigateur (seul leur début figure dans les journaux du serveur).
 
 ## À faire ensuite
 
-1. Option IA personnelle (clé fournie par l'utilisateur, jamais stockée).
-2. Envoi réel des e-mails : variables `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_AUTH=true`, `MAIL_STARTTLS=true`, `MAIL_FROM`, `APP_BASE_URL` (Infomaniak en production).
-3. Déploiement automatique sur le serveur (la pipeline publie les images, rien ne les déploie encore).
+1. Mises à jour automatiques des dépendances (Dependabot) et actions GitHub épinglées par empreinte.
+2. Limitation du débit sur `/api/prepare` et sur la connexion au-delà de la mémoire d'un seul serveur.

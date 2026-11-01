@@ -1,0 +1,5 @@
+# Caddy obtient et renouvelle seul le certificat HTTPS du domaine et redirige HTTP vers HTTPS.
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy frontend:8080
+}

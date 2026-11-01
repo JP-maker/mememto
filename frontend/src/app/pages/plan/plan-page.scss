@@ -105,3 +105,31 @@
     justify-self: start;
   }
 }
+
+.text {
+  margin: 0 0 1.25rem;
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0.75rem 0 0;
+    white-space: pre-wrap; // garde les retours à la ligne du texte saisi
+  }
+}
+
+.end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.redo {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: underline;
+}

@@ -39,7 +39,11 @@ public class SecurityConfig {
                 csp.policyDirectives("default-src 'none'; frame-ancestors 'none'")))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/ping", "/actuator/health").permitAll()
+                // Les erreurs (422, 502, 404…) sont rendues par la page /error : sans cette règle elles deviennent des 401.
+                .requestMatchers("/error").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/plan").permitAll()
+                // Préparation par l'IA de l'utilisateur : sans compte requis, mais le jeton CSRF reste exigé.
+                .requestMatchers(HttpMethod.POST, "/api/prepare").permitAll()
                 // /api/auth/me reste protégé : c'est lui qui dit au front si une session est ouverte.
                 .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/confirm", "/api/auth/login",
                     "/api/auth/logout", "/api/auth/forgot", "/api/auth/reset").permitAll()

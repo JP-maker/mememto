@@ -47,4 +47,35 @@ describe('PlanPage', () => {
     expect(rows[2]).toContain('jour J');
     expect(page.querySelector('.label')?.textContent).toContain('Répétition espacée');
   });
+
+  it('permet de relire le texte saisi', async () => {
+    TestBed.inject(LessonStore).save({
+      title: 'Histoire',
+      text: 'Premier vers\nSecond vers',
+      method: 'ACTIVE_RECALL',
+      deadline: toIsoDate(addDays(new Date(), 2)),
+      minutesPerDay: 20,
+      plan: [{ date: toIsoDate(new Date()), type: 'LEARN', minutes: 20 }],
+    });
+    const page = await render();
+    expect(page.querySelector('details.text summary')?.textContent).toContain('Revoir ma leçon');
+    expect(page.querySelector('details.text p')?.textContent).toBe('Premier vers\nSecond vers');
+  });
+
+  it('propose de relancer la leçon à côté d’un jour fait', async () => {
+    const today = toIsoDate(new Date());
+    TestBed.inject(LessonStore).save({
+      title: 'Histoire',
+      text: 'texte',
+      method: 'ACTIVE_RECALL',
+      deadline: toIsoDate(addDays(new Date(), 2)),
+      minutesPerDay: 20,
+      plan: [{ date: today, type: 'LEARN', minutes: 20 }, { date: toIsoDate(addDays(new Date(), 1)), type: 'REVIEW', minutes: 10 }],
+      done: [today],
+    });
+    const page = await render();
+    const links = page.querySelectorAll('a.redo');
+    expect(links).toHaveLength(1); // seulement sur le jour fait
+    expect(links[0].getAttribute('href')).toBe('/seance?mode=libre');
+  });
 });

@@ -25,7 +25,7 @@ class LessonServiceTest {
 
     static LessonData sample() {
         return new LessonData("Histoire", "La Révolution commence en 1789.", "FEYNMAN", "2026-11-01", 20,
-            List.of(new LessonData.PlanDay("2026-10-18", "LEARN", 20)), List.of("2026-10-18"), Map.of("0", "2026-10-19T08:00:00Z"));
+            List.of(new LessonData.PlanDay("2026-10-18", "LEARN", 20)), List.of("2026-10-18"), Map.of("0", "2026-10-19T08:00:00Z"), null);
     }
 
     @BeforeEach

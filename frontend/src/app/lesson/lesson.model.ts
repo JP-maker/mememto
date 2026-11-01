@@ -9,6 +9,14 @@ export interface PlanDay {
   minutes: number;
 }
 
+/** Phrase préparée par l'IA de l'utilisateur : le mot à cacher, trois faux choix (ou aucun) et des mots clés. */
+export interface PreparedItem {
+  sentence: string;
+  answer: string;
+  keywords: string[];
+  distractors: string[];
+}
+
 /** Date de retour (ISO) de chaque carte, par identifiant d'élément. */
 export type Progress = Record<number, string>;
 
@@ -24,4 +32,6 @@ export interface Lesson {
   /** Jours du plan dont la séance est terminée (AAAA-MM-JJ). */
   done?: string[];
   progress?: Progress;
+  /** Texte préparé par l'IA ; absent quand la préparation est automatique (découpage par phrases). */
+  items?: PreparedItem[];
 }

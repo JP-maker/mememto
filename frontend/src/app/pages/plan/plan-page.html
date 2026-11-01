@@ -12,12 +12,22 @@
     <p><a class="btn" routerLink="/seance">Commencer la séance du jour →</a></p>
   }
 
+  <details class="text">
+    <summary>Revoir ma leçon</summary>
+    <p>{{ l.text }}</p>
+  </details>
+
   <ol class="days">
     @for (r of rows(); track r.date) {
       <li class="day" [class.today]="r.today" [class.rest]="r.type === 'REST'" [class.final]="r.type === 'FINAL'">
         <span class="d">{{ r.label }}</span>
         <span>{{ r.task }}</span>
-        <span class="pill">{{ r.done ? '✔ fait' : r.pill }}</span>
+        <span class="end">
+          <span class="pill">{{ r.done ? '✔ fait' : r.pill }}</span>
+          @if (r.done) {
+            <a class="redo" routerLink="/seance" [queryParams]="{ mode: 'libre' }">Relancer la leçon</a>
+          }
+        </span>
       </li>
     }
   </ol>

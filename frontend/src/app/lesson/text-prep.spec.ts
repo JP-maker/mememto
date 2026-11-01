@@ -1,4 +1,4 @@
-import { choicesFor, groupParts, normalize, prepare, recalled, splitSentences } from './text-prep';
+import { choicesFor, groupParts, normalize, prepare, recalled, splitSentences, toItems } from './text-prep';
 
 const TEXT =
   "La prise de la Bastille a lieu le 14 juillet 1789. L'Assemblée vote la Déclaration des droits de l'homme. " +
@@ -71,5 +71,32 @@ describe('text-prep', () => {
   it('groupe les phrases par paquets de trois', () => {
     const parts = groupParts(prepare(TEXT), 3);
     expect(parts.map((p) => p.length)).toEqual([3, 1]);
+  });
+
+  describe('préparation par l’IA', () => {
+    const ai = toItems([
+      { sentence: 'La Bastille tombe en 1789.', answer: 'Bastille', keywords: ['Bastille', '1789'], distractors: ['Louvre', 'Sorbonne', 'Versailles'] },
+      { sentence: 'Louis XVI est guillotiné.', answer: 'Louis', keywords: [], distractors: [] },
+    ]);
+
+    it('masque la réponse et garde l’ordre des phrases', () => {
+      expect(ai.map((i) => i.id)).toEqual([0, 1]);
+      expect(ai[0].cloze).not.toContain('Bastille');
+    });
+
+    it('utilise les mots clés de l’IA, ou la réponse à défaut', () => {
+      expect(ai[0].keywords).toEqual(['Bastille', '1789']);
+      expect(ai[1].keywords).toEqual(['Louis']);
+    });
+
+    it('propose les faux choix de l’IA quand il y en a trois', () => {
+      const choices = choicesFor(ai[0], ai, () => 0.5)!;
+      expect([...choices].sort()).toEqual(['Bastille', 'Louvre', 'Sorbonne', 'Versailles']);
+    });
+
+    it('revient aux mots clés des autres phrases sans faux choix de l’IA', () => {
+      expect(ai[1].distractors).toBeUndefined();
+      expect(choicesFor(ai[1], ai)).toBeNull(); // pas assez de mots différents
+    });
   });
 });

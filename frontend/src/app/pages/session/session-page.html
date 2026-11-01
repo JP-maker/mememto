@@ -9,8 +9,9 @@
   @case ('finished') {
     <section class="msg">
       <h1>Séance <span class="mark">terminée</span></h1>
-      <p>Bien joué. Reviens à la prochaine séance de ton plan.</p>
+      <p>Bien joué. Reviens à la prochaine séance de ton plan, ou refais-la quand tu veux.</p>
       <a class="btn" routerLink="/plan">Voir mon plan</a>
+      <button type="button" class="btn" (click)="startPractice()">S'entraîner librement</button>
     </section>
   }
   @case ('rest') {
@@ -23,6 +24,7 @@
         }
       </p>
       <a class="btn" routerLink="/plan">Voir mon plan</a>
+      <button type="button" class="btn" (click)="startPractice()">S'entraîner librement</button>
     </section>
   }
   @case ('short') {
@@ -34,14 +36,14 @@
   }
   @case ('ready') {
     @let l = lesson()!;
-    <p class="label">Aujourd'hui · {{ l.minutesPerDay }} min</p>
+    <p class="label">{{ practice() ? 'Entraînement libre · sans limite de temps' : 'Aujourd\'hui · ' + l.minutesPerDay + ' min' }}</p>
     <h1>{{ l.title }}</h1>
     @switch (l.method) {
       @case ('ACTIVE_RECALL') {
         <app-recall-session [items]="items()" [text]="l.text" (finished)="finish()" />
       }
       @case ('SPACED_REPETITION') {
-        <app-cards-session [items]="items()" [progress]="l.progress ?? {}" (graded)="grade($event)" (finished)="finish()" />
+        <app-cards-session [items]="items()" [progress]="practice() ? {} : (l.progress ?? {})" (graded)="grade($event)" (finished)="finish()" />
       }
       @case ('FEYNMAN') {
         <app-feynman-session [items]="items()" (finished)="finish()" />
