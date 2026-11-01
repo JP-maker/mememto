@@ -3,7 +3,7 @@ import { Injectable, computed, effect, inject, signal, untracked } from '@angula
 import { AuthService } from '../auth/auth.service';
 import { Lesson } from './lesson.model';
 
-const STORAGE_KEY = 'memento.lesson';
+const STORAGE_KEY = 'mememto.lesson';
 
 /**
  * Leçons de l'utilisateur.

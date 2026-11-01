@@ -13,7 +13,7 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const page = fixture.nativeElement as HTMLElement;
-    expect(page.querySelector('.brand')?.textContent).toContain('Memento');
+    expect(page.querySelector('.brand')?.textContent).toContain('Mememto');
     expect(page.querySelector('router-outlet')).toBeTruthy();
     expect(page.querySelector('.site-footer')).toBeTruthy();
   });

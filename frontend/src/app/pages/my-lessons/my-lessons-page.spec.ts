@@ -32,8 +32,8 @@ describe('MyLessonsPage', () => {
 
   async function renderLoggedIn() {
     TestBed.inject(LessonStore);
-    TestBed.inject(AuthService).login('jp@memento.fr', 'motdepasse-solide').subscribe();
-    http.expectOne('/api/auth/login').flush({ email: 'jp@memento.fr' });
+    TestBed.inject(AuthService).login('jp@mememto.fr', 'motdepasse-solide').subscribe();
+    http.expectOne('/api/auth/login').flush({ email: 'jp@mememto.fr' });
     TestBed.tick();
     http.expectOne('/api/lessons').flush([lesson('Histoire', 'a'), lesson('Maths', 'b')]);
     const fixture = TestBed.createComponent(MyLessonsPage);

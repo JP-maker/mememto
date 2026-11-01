@@ -26,8 +26,8 @@ describe('LessonStore', () => {
 
   /** Simule une connexion et attend la lecture des leçons du compte. */
   async function logIn(serverLessons: Lesson[] = []): Promise<void> {
-    TestBed.inject(AuthService).login('jp@memento.fr', 'motdepasse-solide').subscribe();
-    http.expectOne('/api/auth/login').flush({ email: 'jp@memento.fr' });
+    TestBed.inject(AuthService).login('jp@mememto.fr', 'motdepasse-solide').subscribe();
+    http.expectOne('/api/auth/login').flush({ email: 'jp@mememto.fr' });
     TestBed.tick();
     http.expectOne('/api/lessons').flush(serverLessons);
   }
@@ -37,7 +37,7 @@ describe('LessonStore', () => {
     store.save(lesson('Histoire'));
 
     expect(store.lesson()?.title).toBe('Histoire');
-    expect(JSON.parse(localStorage.getItem('memento.lesson')!).title).toBe('Histoire');
+    expect(JSON.parse(localStorage.getItem('mememto.lesson')!).title).toBe('Histoire');
     http.expectNone('/api/lessons');
   });
 
@@ -51,7 +51,7 @@ describe('LessonStore', () => {
   });
 
   it('connexion : la leçon d’invité est ajoutée au compte puis retirée du navigateur', async () => {
-    localStorage.setItem('memento.lesson', JSON.stringify(lesson('Faite en invité')));
+    localStorage.setItem('mememto.lesson', JSON.stringify(lesson('Faite en invité')));
     const store = TestBed.inject(LessonStore);
     TestBed.tick();
     await logIn([lesson('Déjà là', 'a')]);
@@ -62,7 +62,7 @@ describe('LessonStore', () => {
     expect(post.request.body.id).toBeUndefined();
     post.flush(lesson('Faite en invité', 'new'));
 
-    expect(localStorage.getItem('memento.lesson')).toBeNull();
+    expect(localStorage.getItem('mememto.lesson')).toBeNull();
     expect(store.lessons().map((l) => l.id)).toEqual(['new', 'a']);
     expect(store.lesson()?.id).toBe('new');
   });

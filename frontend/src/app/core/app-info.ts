@@ -6,5 +6,5 @@
 export const APP_INFO = {
   version: 'dev',
   author: 'Jean-Philippe Carrazé',
-  contactEmail: 'contact@memento.fr',
+  contactEmail: 'contact@mememto.fr',
 } as const;

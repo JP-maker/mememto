@@ -1,6 +1,6 @@
-# Memento
+# Mememto
 
-Site d'aide à la mémorisation : on colle une leçon, on choisit une méthode (rappel actif, répétition espacée, Feynman) et une date butoir, et Memento répartit le travail sur les jours restants.
+Site d'aide à la mémorisation : on colle une leçon, on choisit une méthode (rappel actif, répétition espacée, Feynman) et une date butoir, et Mememto répartit le travail sur les jours restants.
 
 ## Structure
 
@@ -11,7 +11,7 @@ mockups/    Maquettes validées (index.html)
 docker-compose.yml
 ```
 
-Le backend est rangé par fonctionnalité sous `com.memento` (`config`, `web`, puis une zone par domaine : `lesson`, `plan`, `user`…).
+Le backend est rangé par fonctionnalité sous `com.mememto` (`config`, `web`, puis une zone par domaine : `lesson`, `plan`, `user`…).
 
 ## Lancer en local
 
@@ -43,7 +43,7 @@ Microsoft : comptes personnels uniquement (Outlook, Hotmail) ; l'adresse d'un co
 ```
 cd backend && mvn test
 # sans Maven installé (Git Bash, depuis la racine du projet) :
-MSYS_NO_PATHCONV=1 docker run --rm -v "$(pwd)/backend:/app" -v memento-m2:/root/.m2 -w /app maven:3.9-eclipse-temurin-21 mvn test
+MSYS_NO_PATHCONV=1 docker run --rm -v "$(pwd)/backend:/app" -v mememto-m2:/root/.m2 -w /app maven:3.9-eclipse-temurin-21 mvn test
 # PowerShell : remplacer $(pwd) par ${PWD} et retirer MSYS_NO_PATHCONV=1
 cd frontend && npm test
 ```

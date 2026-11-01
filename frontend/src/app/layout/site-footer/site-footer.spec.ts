@@ -12,7 +12,7 @@ describe('SiteFooter', () => {
 
   it('propose le contact par e-mail', async () => {
     const page = await render();
-    expect(page.querySelector('a.btn')?.getAttribute('href')).toContain('mailto:contact@memento.fr');
+    expect(page.querySelector('a.btn')?.getAttribute('href')).toContain('mailto:contact@mememto.fr');
   });
 
   it('renvoie vers la page de don', async () => {
@@ -23,6 +23,6 @@ describe('SiteFooter', () => {
   it('affiche le copyright et la version', async () => {
     const page = await render();
     expect(page.textContent).toContain(`© ${new Date().getFullYear()} Jean-Philippe Carrazé`);
-    expect(page.querySelector('.version')?.textContent).toContain('Memento dev');
+    expect(page.querySelector('.version')?.textContent).toContain('Mememto dev');
   });
 });

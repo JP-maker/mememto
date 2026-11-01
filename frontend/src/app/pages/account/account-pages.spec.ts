@@ -46,15 +46,15 @@ describe('Pages de compte', () => {
     setup();
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     const { fixture, el } = await render(LoginPage);
-    fill(el, 'email', 'jp@memento.fr');
+    fill(el, 'email', 'jp@mememto.fr');
     fill(el, 'password', 'motdepasse-solide');
     await submit(fixture, el);
 
     const req = http.expectOne('/api/auth/login');
-    expect(req.request.body).toEqual({ email: 'jp@memento.fr', password: 'motdepasse-solide' });
-    req.flush({ email: 'jp@memento.fr' });
+    expect(req.request.body).toEqual({ email: 'jp@mememto.fr', password: 'motdepasse-solide' });
+    req.flush({ email: 'jp@mememto.fr' });
 
-    expect(TestBed.inject(AuthService).account()?.email).toBe('jp@memento.fr');
+    expect(TestBed.inject(AuthService).account()?.email).toBe('jp@mememto.fr');
     expect(navigate).toHaveBeenCalledWith('/');
   });
 
@@ -82,7 +82,7 @@ describe('Pages de compte', () => {
   it('connexion : explique qu’il faut confirmer l’adresse (403)', async () => {
     setup();
     const { fixture, el } = await render(LoginPage);
-    fill(el, 'email', 'jp@memento.fr');
+    fill(el, 'email', 'jp@mememto.fr');
     fill(el, 'password', 'motdepasse-solide');
     await submit(fixture, el);
     http.expectOne('/api/auth/login').flush(null, { status: 403, statusText: 'Forbidden' });
@@ -102,7 +102,7 @@ describe('Pages de compte', () => {
   it('inscription : refuse un mot de passe trop court puis annonce l’e-mail de confirmation', async () => {
     setup();
     const { fixture, el } = await render(RegisterPage);
-    fill(el, 'email', 'jp@memento.fr');
+    fill(el, 'email', 'jp@mememto.fr');
     fill(el, 'password', 'court');
     await submit(fixture, el);
     http.expectNone('/api/auth/register');
@@ -143,7 +143,7 @@ describe('Pages de compte', () => {
   it('mot de passe oublié : même message quelle que soit l’adresse', async () => {
     setup();
     const { fixture, el } = await render(ForgotPage);
-    fill(el, 'email', 'inconnu@memento.fr');
+    fill(el, 'email', 'inconnu@mememto.fr');
     await submit(fixture, el);
     http.expectOne('/api/auth/forgot').flush(null, { status: 202, statusText: 'Accepted' });
     await fixture.whenStable();

@@ -1,7 +1,7 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/memento}
-    username: ${DB_USER:memento}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/mememto}
+    username: ${DB_USER:mememto}
     password: ${DB_PASSWORD}   # obligatoire : aucune valeur par défaut volontairement
   jpa:
     open-in-view: false
@@ -57,9 +57,9 @@ server:
         same-site: lax
         secure: ${COOKIE_SECURE:false}   # true dès qu'on passe en HTTPS
 
-memento:
+mememto:
   base-url: ${APP_BASE_URL:http://localhost:4200}   # sert à construire les liens des e-mails
-  mail.from: ${MAIL_FROM:Memento <contact@memento.fr>}
+  mail.from: ${MAIL_FROM:Mememto <contact@mememto.fr>}
 
 management:
   endpoints.web.exposure.include: health
